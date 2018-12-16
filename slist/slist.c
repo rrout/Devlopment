@@ -259,4 +259,65 @@ NODE * findNthElementFronTail(NODE *root, int n)
 
 NODE * deleteSlist(NODE *root)
 {
+	NODE *p = NULL, q =NULL;
+	p = q =root;
+	while (p)
+	{
+		q = p;
+		p = p->next;
+		free (q);
+	}
+	return NULL;
+}
+
+NODE * deleteSlistREC(NODE *root)
+{
+	if (root == NULL)
+		return root;
+	deleteSlistREC(root->next);
+	free(root);
+	return NULL:
+}
+
+NODE * findMiddleLinkList(NODE *root)
+{
+	int i;
+	NODE *p = root, *middle = NULL;
+	for (i = 0; p != NULL; i++)
+	{
+		if (i == 1)
+			middle = root;
+		if ((i % 2) == 1)
+			middle = middle->next;
+	}
+	return middle;
+}
+
+int isListSame(NODE *root1, NODE *root2)
+{
+	if (root1 == NULL && root2 == NULL)
+		return 1;
+	else if (root1 != root2)
+			return 0;
+	else
+	{
+		status = isListSame(root1->next, root2->next);
+		if (root1->data == root2->data)
+			return 1;
+		else
+			return 0;
+	}
+	return status;
+}
+
+NODE copySList(NODE *root)
+{
+	NODE *p = NULL;
+	if(root == NULL)
+		return root;
+
+	p = malloc(sizeof(NODE));
+	p->data = root->data;
+	p->next = copySList(root->next);
+	return p;
 }

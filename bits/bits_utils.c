@@ -20,6 +20,20 @@ int countBits(unsigned int num)
 	*/
 }
 
+int printBinary(int num)
+{
+	int tmp = 0;
+	if (num)
+	{
+		tmp = num%2;
+		num = num >> 1;
+		printBinary(num);
+		printf("%d", tmp);
+	} else {
+		printf("\n");
+	}
+}
+
 int rotateBits(unsigned int num)
 {
 	unsigned int tmp = 0;
@@ -61,6 +75,3 @@ int reverseBitFromPos(unsigned int num, int pos, int numBits)
 	num3 = num3 ^ mask;
 	rturn (num1 | num3);
 }
-
-
-
