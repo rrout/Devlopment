@@ -14,6 +14,7 @@ typedef enum {
 	CMD_MODE_CONFIG,
 	CMD_MODE_IF,
 	CMD_MODE_MIF,
+	CMD_MODE_NONE,
 	CMD_MODE_MAX,
 }cdb_cmd_mode_t;
 
