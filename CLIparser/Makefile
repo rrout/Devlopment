@@ -1,5 +1,5 @@
 TARGET = prog
-LIBS = -lm
+LIBS = -lm -lreadline
 CC = gcc
 CFLAGS = -g -Wall
 

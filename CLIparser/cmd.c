@@ -114,7 +114,7 @@ cdb_node_t cmd_enable[] = {
 		"Show Commands",
 		NULL,
 		cmd_show,
-		CMD_FLAG_NEXT
+		CMD_FLAG_NEXT | CMD_FLAG_LAST
 	}
 };
 

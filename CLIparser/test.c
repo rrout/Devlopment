@@ -6,8 +6,9 @@
 
 int main()
 {
-	parserCliSrart("Switch");
-
+	/*parserCliSrart("Switch");*/
+	extern void cmdCLIStart(char *cliHost);
+	cmdCLIStart("Switch");
 	return 1;
 }
 

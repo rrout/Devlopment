@@ -76,6 +76,56 @@ void parserInit(char *cliHost, cdb_t *sptr_cdb)
 		/*sprintf(sptr_cdb->cmd_prompt,CMD_LEN,"%c",getCmdModePrompt(sptr_cdb->cmd_mode));*/
 }
 
+extern cdb_node_t cmd_enable[];
+
+cdb_node_t * getCdbNode(char *cmdline)
+{
+	char delim[] = " "; // " ,-";
+	char *token;
+	int tokenCount = 0,  i = 0, subnode = 0;;
+	char tokenDb[20][50] = {'\0'};
+	cdb_node_t *cmdRoot;
+	bool gotNode = FALSE;
+	bool cmdNodeFound = FALSE;
+
+	if (strlen(cmdline) == 0)
+	{
+		return cmd_enable;
+	}
+	for (token = strtok(cmdline, delim); token; token = strtok(NULL, delim))
+	{
+		strncpy(tokenDb[tokenCount++], token, sizeof(tokenDb[0]));
+	}
+
+	cmdRoot = cmd_enable;
+	while (i < tokenCount)
+	{
+		subnode = 0;
+		while (!(cmdRoot[subnode].flags & CMD_FLAG_LAST))
+		{
+			if(strcmp(cmdRoot[subnode].cmd , tokenDb[i]) == 0)
+			{
+				cmdRoot = cmdRoot[subnode].next_node;
+				gotNode = TRUE;
+				break;
+			}
+			subnode++;
+		}
+		if (gotNode == TRUE)
+		{
+			cmdNodeFound = TRUE;
+			break;
+		}
+		/* try to get next node */
+		i++;
+	}
+
+	if (cmdNodeFound)
+		return cmdRoot;
+	else
+		return NULL;
+}
+
 void parserCliSrart(char *cliHost)
 {
 	char cmdLine[CMD_LEN] = {0};
