@@ -158,3 +158,21 @@ bst_t * copyBst(bst_t *src, bst_t *dst)
 
 }
 
+bst_t * findLeastCommonAncentor(bst_t *root, bst_t *nodeA, bst_t *nodeB)
+{
+	bst_t *left, *right;
+	if (root == NULL)
+		return root;
+	if (root == nodeA || root == nodeB)
+		return root;
+	left = findLeastCommonAncentor(root->left, nodeA, nodeB);
+	right = findLeastCommonAncentor(root->right, nodeA, nodeB);
+
+	if (left && right)
+		return root;
+	if (left)
+		return left;
+	if (right)
+		return right;
+}
+
