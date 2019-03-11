@@ -32,4 +32,5 @@ bst_t * mirrorCopyBst(bst_t *src, bst_t *dst);
 bst_t * copyBst(bst_t *src, bst_t *dst);
 
 bst_t * findLeastCommonAncentor(bst_t *root, bst_t *nodeA, bst_t *nodeB);
+int distanceFromRoot(bst_t *root, bst_t *node, int dist);
 #endif /*__BST_H__*/

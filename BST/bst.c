@@ -176,3 +176,21 @@ bst_t * findLeastCommonAncentor(bst_t *root, bst_t *nodeA, bst_t *nodeB)
 		return right;
 }
 
+int distanceFromRoot(bst_t *root, bst_t *node, int dist)
+{
+	int left = 0, right = 0;
+	if (root == NULL)
+		return 0;
+	if (root == node)
+		return dist;
+	//Search left
+	left = distanceFromRoot(root->left, node, dist+1);
+	if(left != 0)
+		return left;
+	right = distanceFromRoot(root->right, node, dist+1);
+	if (right != 0)
+		return right;
+	return 0;
+}
+
+
