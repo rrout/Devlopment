@@ -83,20 +83,20 @@ cdb_node_t * getCdbNode(char *cmdline)
 	char delim[] = " "; // " ,-";
 	char *token;
 	int tokenCount = 0,  i = 0, subnode = 0;;
-	char tokenDb[20][50] = {{'\0'}};
+	char tokenDb[CMD_MAX_TOKEN][CMD_MAX_TOKEN_LEN] = {{'\0'}};
 	cdb_node_t *cmdRoot;
 	bool gotNode = FALSE;
 	bool cmdNodeFound = FALSE;
-    char cmmmonnnd[1024] = {0};
+    char command[1024] = {0};
 
-    strcpy (cmmmonnnd, cmdline);
+    strcpy (command, cmdline);
 
 	if (strlen(cmdline) == 0)
 	{
 		return cmd_enable;
 	}
 
-	for (token = strtok(cmmmonnnd, delim); token; token = strtok(NULL, delim))
+	for (token = strtok(command, delim); token; token = strtok(NULL, delim))
 	{
 		strncpy(tokenDb[tokenCount++], token, sizeof(tokenDb[0]));
 	}
@@ -135,14 +135,14 @@ cdb_node_t * getCdbNextNode(char *cmdline)
 	char delim[] = " "; // " ,-";
 	char *token;
 	int tokenCount = 0,  i = 0, subnode = 0;;
-	char tokenDb[20][50] = {{'\0'}};
-    unsigned int tokenDbMatched[20] = {0};
+	char tokenDb[CMD_MAX_TOKEN][CMD_MAX_TOKEN_LEN] = {{'\0'}};
+    unsigned int tokenDbMatched[CMD_MAX_TOKEN] = {FALSE};
 	cdb_node_t *cmdRoot;
-    char cmmmonnnd[1024] = {0};
+    char command[1024] = {0};
     int matchCount = 0;
     cdb_cmd_mode_t curr_mode =  CMD_MODE_MAX;
 
-    strcpy (cmmmonnnd, cmdline);
+    strcpy (command, cmdline);
     curr_mode = getCmdModeFromModeStr(g_sptr_cdb.curr_mode_str);
     cmdRoot = getCmdNodeFromMode(curr_mode);
 
@@ -154,7 +154,7 @@ cdb_node_t * getCdbNextNode(char *cmdline)
 		return cmdRoot;
 	}
 
-	for (token = strtok(cmmmonnnd, delim); token; token = strtok(NULL, delim))
+	for (token = strtok(command, delim); token; token = strtok(NULL, delim))
 	{
 		strncpy(tokenDb[tokenCount++], token, sizeof(tokenDb[0]));
 	}
@@ -214,7 +214,7 @@ cdb_node_t * getCdbNextNode(char *cmdline)
     /* command has to match all token except last */ 
     for( i=0 ; i < tokenCount-1 ; i++ )
     {
-        if(tokenDbMatched[i] != 1)
+        if(tokenDbMatched[i] != TRUE)
             return NULL;
     }
     return cmdRoot;
@@ -264,12 +264,12 @@ cdb_node_t *showHelp(char *cmdline)
     char delim[] = " ";
     char *token;
     int tokenCount = 0,  i = 0, subnode = 0, curnode = 0, matchCount = 0;
-    char tokenDb[20][50] = {{'\0'}};
+    char tokenDb[CMD_MAX_TOKEN][CMD_MAX_TOKEN_LEN] = {{'\0'}};
     cdb_cmd_mode_t curr_mode =  CMD_MODE_MAX;
     cdb_node_t *cmdRoot = NULL;
-    char cmmmonnnd[1024] = {0};
+    char command[1024] = {0};
 
-    strcpy (cmmmonnnd, cmdline);
+    strcpy (command, cmdline);
     if (strlen(cmdline) == 0)
         return cmdRoot;
     curr_mode = getCmdModeFromModeStr(g_sptr_cdb.curr_mode_str);
@@ -279,7 +279,7 @@ cdb_node_t *showHelp(char *cmdline)
         printf ("Unknown Command\n");
         return NULL;
     }
-    for (token = strtok(cmmmonnnd, delim); token; token = strtok(NULL, delim))
+    for (token = strtok(command, delim); token; token = strtok(NULL, delim))
         strncpy(tokenDb[tokenCount++], token, sizeof(tokenDb[0]));
 
     while (i < tokenCount)
@@ -306,7 +306,7 @@ cdb_node_t *showHelp(char *cmdline)
         printf ("Unknown Command\n");
         return NULL;
     }
-    /* if cmd tree ends show CR else show node options*/
+    /* if cmd tree ends, show CR else show node options*/
     if (!cmdRoot && matchCount == tokenCount-1)
         showCmdCrOption();
     else
@@ -345,14 +345,14 @@ cdb_node_t * getCdbExecCli(char *cmdline)
 	char *token;
 	int tokenCount = 0,  i = 0, subnode = 0, curnode = 0;
     int last_token = 0;
-	char tokenDb[20][50] = {{'\0'}};
+	char tokenDb[CMD_MAX_TOKEN][CMD_MAX_TOKEN_LEN] = {{'\0'}};
 	cdb_node_t *cmdRoot;
-    char cmmmonnnd[1024] = {0};
+    char command[1024] = {0};
     int matchCount = 0;
     cdb_cmd_mode_t curr_mode =  CMD_MODE_MAX;
     cdb_cmd_mode_t prev_mode =  CMD_MODE_MAX;
 
-    strcpy (cmmmonnnd, cmdline);
+    strcpy (command, cmdline);
     curr_mode = getCmdModeFromModeStr(g_sptr_cdb.curr_mode_str);
     cmdRoot = getCmdNodeFromMode(curr_mode);
     if (!cmdRoot)
@@ -366,7 +366,7 @@ cdb_node_t * getCdbExecCli(char *cmdline)
 		return cmdRoot;
 	}
 
-	for (token = strtok(cmmmonnnd, delim); token; token = strtok(NULL, delim))
+	for (token = strtok(command, delim); token; token = strtok(NULL, delim))
 	{
 		strncpy(tokenDb[tokenCount++], token, sizeof(tokenDb[0]));
 	}

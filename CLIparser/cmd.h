@@ -24,6 +24,15 @@ typedef enum {
 	CMD_MODE_MAX,
 }cdb_cmd_mode_t;
 
+typedef enum {
+    CMD_TYPE_CMD,
+    CMD_TYPE_STRING,
+    CMD_TYPE_DECIMAL,
+    CMD_TYPE_HEX,
+    CMD_TYPE_IP,
+    CMD_TYPE_MAX,
+}cdb_cmd_type_t;
+
 typedef struct _cdb {
 	char cmd_hostname[CMD_HOST_NAME_LEN];
 	cdb_cmd_mode_t mode;
@@ -56,6 +65,7 @@ typedef struct _cdb {
 
 typedef struct _cdb_node {
 	unsigned int mode_flags;
+    unsigned int cmd_type;
 	char cmd[CMD_LEN];
 	char cmd_desc[CMD_DESC_LEN];
 	void (*cmd_callback) (cdb_t *sptr_cdb);

@@ -7,13 +7,13 @@
 #include "parser.h"
 
 mode_map_t g_mode_map[CMD_MODE_MAX] = {
-                                        {CMD_MODE_MAX, CMD_MODE_ROOT, "root", "$", cmd_root},
-                                        {CMD_MODE_ROOT, CMD_MODE_ENABLE, "config-enable", ">", cmd_enable},
-                                        {CMD_MODE_ENABLE , CMD_MODE_CONFIG, "config-term", "#",cmd_cfg},
-                                        {CMD_MODE_CONFIG, CMD_MODE_IF, "config-if", "#", cmd_cfg},
-                                        {CMD_MODE_CONFIG, CMD_MODE_MIF, "config-mif", "#", cmd_cfg},
-                                        {CMD_MODE_CONFIG , CMD_MODE_NONE, "config-none", "#", cmd_cfg},
-                                    };
+    {CMD_MODE_MAX, CMD_MODE_ROOT, "root", "$", cmd_root},
+    {CMD_MODE_ROOT, CMD_MODE_ENABLE, "config-enable", ">", cmd_enable},
+    {CMD_MODE_ENABLE , CMD_MODE_CONFIG, "config-term", "#",cmd_cfg},
+    {CMD_MODE_CONFIG, CMD_MODE_IF, "config-if", "#", cmd_cfg},
+    {CMD_MODE_CONFIG, CMD_MODE_MIF, "config-mif", "#", cmd_cfg},
+    {CMD_MODE_CONFIG , CMD_MODE_NONE, "config-none", "#", cmd_cfg},
+};
 
 char * getCmdModeStr(cdb_cmd_mode_t mode)
 {
@@ -21,7 +21,7 @@ char * getCmdModeStr(cdb_cmd_mode_t mode)
     for( i = 0 ; i < CMD_MODE_MAX ; i++ )
     {
         if (mode == i)
-            return g_mode_map[i].mode_str;   
+            return g_mode_map[i].mode_str;
     }
     return "Unknown";
 }
@@ -32,7 +32,7 @@ char * getCmdModePrompt(cdb_cmd_mode_t mode)
     for( i = 0 ; i < CMD_MODE_MAX ; i++ )
     {
         if (mode == i)
-            return g_mode_map[i].mode_prompt;           
+            return g_mode_map[i].mode_prompt;
     }
     return "*";
 }
@@ -76,6 +76,7 @@ void setCmdModeParams(cdb_t *sptr_cdb, cdb_cmd_mode_t mode)
 cdb_node_t cmd_root[] = {
 	{
 		CMD_MODE_ROOT,
+        CMD_TYPE_CMD,
 		"enable",
 		"Enable Command prompt for configuration",
 		enable_cmd_prompt,
@@ -87,6 +88,7 @@ cdb_node_t cmd_root[] = {
 cdb_node_t cmd_cfg_terminal[] = {
 	{
 		CMD_MODE_ENABLE,
+        CMD_TYPE_CMD,
 		"terminal",
 		"Config Terminal",
 		enable_config_terminal,
@@ -98,6 +100,7 @@ cdb_node_t cmd_cfg_terminal[] = {
 cdb_node_t cmd_cfg[] = {
 	{
 		CMD_MODE_ENABLE,
+        CMD_TYPE_CMD,
 		"interface",
 		"Config interface",
 		config_interface,
@@ -106,6 +109,7 @@ cdb_node_t cmd_cfg[] = {
 	},
     {
 		CMD_MODE_ENABLE,
+        CMD_TYPE_CMD,
 		"show",
 		"Show Commands",
 		NULL,
@@ -117,6 +121,7 @@ cdb_node_t cmd_cfg[] = {
 cdb_node_t cmd_show[] = {
 	{
 		CMD_MODE_NONE,
+        CMD_TYPE_CMD,
 		"version",
 		"Check Software Version",
 		cmd_show_version,
@@ -125,6 +130,7 @@ cdb_node_t cmd_show[] = {
 	},
 	{
 		CMD_MODE_NONE,
+        CMD_TYPE_CMD,
 		"config",
 		"Show Configurations",
 		cmd_show_configurations,
@@ -136,14 +142,16 @@ cdb_node_t cmd_show[] = {
 cdb_node_t cmd_enable[] = {
 	{
 		CMD_MODE_ENABLE,
+        CMD_TYPE_CMD,
 		"config",
 		"Enable Configuration",
 		NULL,
 		cmd_cfg_terminal,
-		CMD_FLAG_NEXT 
+		CMD_FLAG_NEXT
 	},
 	{
 		CMD_MODE_ENABLE,
+        CMD_TYPE_CMD,
 		"show",
 		"Show Commands",
 		NULL,
@@ -152,16 +160,6 @@ cdb_node_t cmd_enable[] = {
 	}
 };
 
-/*cdb_node_t *global_cli_mode[CMD_MODE_MAX][CMD_MODE_MAX] = {
-                                        {NULL, cmd_root},
-                                        {cmd_root, cmd_enable},
-                                        {cmd_enable, cmd_cfg_terminal},
-                                        {NULL, NULL},
-                                        {NULL, NULL},
-                                        {NULL, NULL},
-                                        {NULL, NULL},
-                                    };
-                                    */
 cdb_node_t * getCmdNodeFromMode(cdb_cmd_mode_t mode)
 {
     int i;
@@ -172,34 +170,6 @@ cdb_node_t * getCmdNodeFromMode(cdb_cmd_mode_t mode)
     }
     return NULL;
 }
-
-/*cdb_node_t * getPrevCmdNodeFromMode(cdb_cmd_mode_t mode)
-{
-    int i;
-    for( i = 0 ; i < CMD_MODE_MAX ; i++ )
-    {
-        if (mode == i)
-        {
-            return global_cli_mode[i][0];
-        }
-    }
-    return NULL;
-}
-
-cdb_cmd_mode_t getPrevCmdModeFromMode(cdb_cmd_mode_t mode)
-{
-    int i;
-    for( i = 0 ; i < CMD_MODE_MAX ; i++ )
-    {
-        if (mode == i)
-        {
-            return getCmdModeFromModeStr(global_cli_mode[i][0]);
-        }
-    }
-    return CMD_MODE_MAX;
-}
-*/
-
 
 
 
