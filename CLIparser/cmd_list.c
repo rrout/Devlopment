@@ -7,14 +7,28 @@
 
 void enable_config_terminal(cdb_t *sptr_cdb)
 {
+    setCmdModeParams(sptr_cdb, CMD_MODE_CONFIG);
 }
 void cmd_show_version(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->last_cmd_token == 0)
+        return;
+    printf ("CLI Parser V.0.01\n");
 }
 void cmd_show_configurations(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->last_cmd_token == 0)
+        return;
+    printf ("====== Current Saved Configuration ========\n");
 }
 void enable_cmd_prompt(cdb_t *sptr_cdb)
 {
+    setCmdModeParams(sptr_cdb, CMD_MODE_ENABLE);
 }
+
+void config_interface(cdb_t *sptr_cdb)
+{
+
+}
+
 

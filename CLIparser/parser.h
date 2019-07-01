@@ -17,4 +17,5 @@ void parserInit(char *cliHost, cdb_t *sptr_cdb);
 void parserCliSrart(char *cliHost);
 cdb_node_t * getCdbNode(char *);
 
+extern cdb_t g_sptr_cdb;
 #endif /*__PARSER_H__*/

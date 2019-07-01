@@ -8,6 +8,12 @@
 #define CMD_DESC_LEN		255
 #define CMD_LINE_LEN		255
 #define CMD_HOST_NAME_LEN	55
+
+#define CMD_FLAG_FIRST            1 << 0
+#define CMD_FLAG_LAST             1 << 1
+#define CMD_FLAG_NEXT             1 << 2
+#define CMD_FLAG_CR_ALLOWED       1 << 3
+
 typedef enum {
 	CMD_MODE_ROOT,
 	CMD_MODE_ENABLE,
@@ -23,6 +29,7 @@ typedef struct _cdb {
 	cdb_cmd_mode_t mode;
 	char curr_mode_str[CMD_LEN];
 	char cmd_prompt[2];
+    unsigned int last_cmd_token;
 	unsigned int number1;
 	unsigned int number2;
 	unsigned int number3;
@@ -47,13 +54,6 @@ typedef struct _cdb {
 	char str11[CMD_LEN];
 }cdb_t;
 
-/*void (cmd_callback *) (cdb_t *sptr_cdb);*/
-typedef enum {
-	CMD_FLAG_FIRST,
-	CMD_FLAG_LAST,
-	CMD_FLAG_NEXT
-}cdb_cmd_flag_t;
-
 typedef struct _cdb_node {
 	unsigned int mode_flags;
 	char cmd[CMD_LEN];
@@ -63,8 +63,40 @@ typedef struct _cdb_node {
 	unsigned int flags;
 }cdb_node_t;
 
+typedef struct _mode_map {
+    cdb_cmd_mode_t prevMode;
+    cdb_cmd_mode_t mode;
+    char *mode_str;
+    char *mode_prompt;
+    cdb_node_t *modeRootNode;
+}mode_map_t;
+
+
+
+/*void (cmd_callback *) (cdb_t *sptr_cdb);*/
+/*typedef enum {
+	CMD_FLAG_FIRST,
+	CMD_FLAG_LAST,
+	CMD_FLAG_NEXT,
+    CMD_FLAG_CR_ALLOWED
+}cdb_cmd_flag_t;*/
+
+
+extern cdb_node_t cmd_root[];
+extern cdb_node_t cmd_enable[];
+extern cdb_node_t cmd_cfg[];
+extern cdb_node_t cmd_cfg_terminal[];
+extern cdb_node_t cmd_show[];
+
+
 char * getCmdModeStr(cdb_cmd_mode_t mode);
 char * getCmdModePrompt(cdb_cmd_mode_t mode);
+cdb_cmd_mode_t getCurrCmdMode();
+cdb_cmd_mode_t getPrevCmdMode(cdb_cmd_mode_t mode);
+cdb_cmd_mode_t getCmdModeFromModeStr(char *str);
 void setCmdModeParams(cdb_t *sptr_cdb, cdb_cmd_mode_t mode);
+cdb_node_t * getCmdNodeFromMode(cdb_cmd_mode_t mode);
+cdb_node_t * getPrevCmdNodeFromMode(cdb_cmd_mode_t mode);
+cdb_cmd_mode_t getPrevCmdModeFromMode(cdb_cmd_mode_t mode);
 
 #endif /*__CMD_H__*/

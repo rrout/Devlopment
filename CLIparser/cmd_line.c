@@ -23,6 +23,9 @@ void cmdLineInit(char *hostname)
 {
 	/* Allow conditional parsing of the ~/.inputrc file. */
 	rl_readline_name = hostname;
+
+    rl_bind_key('\t', rl_complete);
+
 	/* Tell the completer that we want a crack first. */
 	rl_attempted_completion_function = cli_completion;
 }
@@ -115,7 +118,7 @@ command_generator (const char *text, int state)
 	static int list_index, len;
 	char *name;
 	cdb_node_t *cmdNode = NULL;
-
+    int num_index = 0;
 	/* If this is a new word to complete, initialize now.  This includes
 	   saving the length of TEXT for efficiency, and initializing the index
 	   variable to 0. */
@@ -125,32 +128,34 @@ command_generator (const char *text, int state)
 		len = strlen (text);
 	}
 #if 1
-	cmdNode = getCdbNode(rl_line_buffer);
+	cmdNode = getCdbNextNode(rl_line_buffer);
 	if (cmdNode == NULL)
 	{
 		return ((char *)NULL);
 	}
 	else
 	{
-		int num_index = 0;
-		while(!(cmdNode[num_index++].flags & CMD_FLAG_LAST));
+        //int num_index = 0;
+        while(!(cmdNode[num_index++].flags & CMD_FLAG_LAST));
 		if(list_index >= num_index)
 			return ((char *)NULL);
 
 	}
 	/* Return the next name which partially matches from the command list. */
 	while (name = cmdNode[list_index].cmd)
-#elif
+#else
 	while (name = commands[list_index].name)
 #endif
 	{
 		list_index++;
 
 		if (strncmp (name, text, len) == 0)
-			return (dupstr(name));
+            return (dupstr(name));
+            //return strdup(name);
 
-		/*if(cmdNode[list_index].flags & CMD_FLAG_LAST)*/
-		/*return ((char *)NULL);*/
+		//if(cmdNode[list_index].flags & CMD_FLAG_LAST)
+        if (list_index > num_index)
+		return ((char *)NULL);
 	}
 
 	/* If no names matched, then return NULL. */
@@ -161,6 +166,7 @@ command_generator (const char *text, int state)
 int
 cmdLineExecute(char *line)
 {
+    getCdbExecCli(line);
 #if 0
 	register int i;
 	COMMAND *command;
@@ -233,8 +239,8 @@ void cmdLineStart(char *cliHost, cdb_t *sptr_cdb)
 
 void cmdCLIStart(char *cliHost)
 {
-	cdb_t sptr_cdb;
-	memset(&sptr_cdb, 0, sizeof(sptr_cdb));
-	cmdLineStart(cliHost, &sptr_cdb);
+	//cdb_t sptr_cdb;
+    //memset(&sptr_cdb, 0, sizeof(sptr_cdb));
+    cmdLineStart(cliHost, &g_sptr_cdb);
 }
 
