@@ -1,4 +1,4 @@
-TARGET = prog
+TARGET = CLI
 LIBS = -lm -lreadline
 CC = gcc
 CFLAGS = -g -Wall
@@ -18,6 +18,7 @@ HEADERS = $(wildcard *.h)
 .PRECIOUS: $(TARGET) $(OBJECTS)
 
 $(TARGET): $(OBJECTS)
+	@echo Building $@
 	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
 
 clean:

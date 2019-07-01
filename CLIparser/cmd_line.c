@@ -85,28 +85,6 @@ cli_completion (const char *text, int start, int end)
 	return (matches);
 }
 
-
-typedef struct {
-  char *name;			/* User printable name of the function. */
-  rl_icpfunc_t *func;		/* Function to call to do the job. */
-  char *doc;			/* Documentation for this function.  */
-} COMMAND;
-
-COMMAND commands[] = {
-  { "cd", NULL, "Change to directory DIR" },
-  { "delete", NULL, "Delete FILE" },
-  { "help", NULL, "Display this text" },
-  { "?", NULL, "Synonym for `help'" },
-  { "list", NULL, "List files in DIR" },
-  { "ls", NULL, "Synonym for `list'" },
-  { "pwd", NULL, "Print the current working directory" },
-  { "quit", NULL, "Quit using Fileman" },
-  { "rename", NULL, "Rename FILE to NEWNAME" },
-  { "stat", NULL, "Print out statistics on FILE" },
-  { "view", NULL, "View the contents of FILE" },
-  { (char *)NULL, (rl_icpfunc_t *)NULL, (char *)NULL }
-};
-
 /*
    Generator function for command completion.  STATE lets us know whether
    to start from scratch; without any state (i.e. STATE == 0), then we
@@ -127,7 +105,6 @@ command_generator (const char *text, int state)
 		list_index = 0;
 		len = strlen (text);
 	}
-#if 1
 	cmdNode = getCdbNextNode(rl_line_buffer);
 	if (cmdNode == NULL)
 	{
@@ -142,10 +119,7 @@ command_generator (const char *text, int state)
 
 	}
 	/* Return the next name which partially matches from the command list. */
-	while (name = cmdNode[list_index].cmd)
-#else
-	while (name = commands[list_index].name)
-#endif
+	while ((name = cmdNode[list_index].cmd))
 	{
 		list_index++;
 
@@ -167,40 +141,7 @@ int
 cmdLineExecute(char *line)
 {
     getCdbExecCli(line);
-#if 0
-	register int i;
-	COMMAND *command;
-	char *word;
-
-	/* Isolate the command word. */
-	i = 0;
-	while (line[i] && whitespace (line[i]))
-		i++;
-	word = line + i;
-
-	while (line[i] && !whitespace (line[i]))
-		i++;
-
-	if (line[i])
-		line[i++] = '\0';
-
-	command = find_command (word);
-
-	if (!command)
-	{
-		fprintf (stderr, "%s: No such command for FileMan.\n", word);
-		return (-1);
-	}
-
-	/* Get argument to command, if any. */
-	while (whitespace (line[i]))
-		i++;
-
-	word = line + i;
-
-	/* Call the function. */
-	return ((*(command->func)) (word));
-#endif
+    return 0;
 }
 
 void cmdLineStart(char *cliHost, cdb_t *sptr_cdb)
@@ -215,7 +156,8 @@ void cmdLineStart(char *cliHost, cdb_t *sptr_cdb)
 	/* Loop reading and executing lines until the user quits. */
 	for ( ; done == 0; )
     {
-		snprintf(prompt, sizeof(prompt), "%s(%s)%s ", sptr_cdb->cmd_hostname, sptr_cdb->curr_mode_str, sptr_cdb->cmd_prompt);
+		snprintf(prompt, sizeof(prompt), "%s(%s)%s ",
+            sptr_cdb->cmd_hostname, sptr_cdb->curr_mode_str, sptr_cdb->cmd_prompt);
 		line = readline (prompt);
 
 		if (!line)

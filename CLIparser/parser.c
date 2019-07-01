@@ -83,7 +83,7 @@ cdb_node_t * getCdbNode(char *cmdline)
 	char delim[] = " "; // " ,-";
 	char *token;
 	int tokenCount = 0,  i = 0, subnode = 0;;
-	char tokenDb[20][50] = {'\0'};
+	char tokenDb[20][50] = {{'\0'}};
 	cdb_node_t *cmdRoot;
 	bool gotNode = FALSE;
 	bool cmdNodeFound = FALSE;
@@ -135,11 +135,9 @@ cdb_node_t * getCdbNextNode(char *cmdline)
 	char delim[] = " "; // " ,-";
 	char *token;
 	int tokenCount = 0,  i = 0, subnode = 0;;
-	char tokenDb[20][50] = {'\0'};
+	char tokenDb[20][50] = {{'\0'}};
     unsigned int tokenDbMatched[20] = {0};
 	cdb_node_t *cmdRoot;
-	bool gotNode = FALSE;
-	bool cmdNodeFound = FALSE;
     char cmmmonnnd[1024] = {0};
     int matchCount = 0;
     cdb_cmd_mode_t curr_mode =  CMD_MODE_MAX;
@@ -266,9 +264,9 @@ cdb_node_t *showHelp(char *cmdline)
     char delim[] = " ";
     char *token;
     int tokenCount = 0,  i = 0, subnode = 0, curnode = 0, matchCount = 0;
-    char tokenDb[20][50] = {'\0'};
+    char tokenDb[20][50] = {{'\0'}};
     cdb_cmd_mode_t curr_mode =  CMD_MODE_MAX;
-    cdb_node_t *cmdRoot;
+    cdb_node_t *cmdRoot = NULL;
     char cmmmonnnd[1024] = {0};
 
     strcpy (cmmmonnnd, cmdline);
@@ -347,11 +345,8 @@ cdb_node_t * getCdbExecCli(char *cmdline)
 	char *token;
 	int tokenCount = 0,  i = 0, subnode = 0, curnode = 0;
     int last_token = 0;
-	char tokenDb[20][50] = {'\0'};
+	char tokenDb[20][50] = {{'\0'}};
 	cdb_node_t *cmdRoot;
-    cdb_node_t *prevCmdRoot = NULL;
-	bool gotNode = FALSE;
-	bool cmdNodeFound = FALSE;
     char cmmmonnnd[1024] = {0};
     int matchCount = 0;
     cdb_cmd_mode_t curr_mode =  CMD_MODE_MAX;
