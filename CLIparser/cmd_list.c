@@ -21,6 +21,14 @@ void cmd_show_configurations(cdb_t *sptr_cdb)
         return;
     printf ("====== Current Saved Configuration ========\n");
 }
+void cmd_show_global_config_ver(cdb_t *sptr_cdb)
+{
+    if (sptr_cdb->last_cmd_token == 0)
+        return;
+    printf ("====== Current Global Config List ========\n");
+    printf ("\n");
+}
+
 void enable_cmd_prompt(cdb_t *sptr_cdb)
 {
     setCmdModeParams(sptr_cdb, CMD_MODE_ENABLE);

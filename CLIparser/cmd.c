@@ -128,10 +128,19 @@ cdb_node_t cmd_show[] = {
 		NULL,
 		CMD_FLAG_CR_ALLOWED
 	},
+    {
+        CMD_MODE_NONE,
+        CMD_TYPE_CMD,
+        "config-veriables",
+        "Show Global Config Variables",
+        cmd_show_global_config_ver,
+        NULL,
+        CMD_FLAG_CR_ALLOWED
+    },
 	{
 		CMD_MODE_NONE,
         CMD_TYPE_CMD,
-		"config",
+		"configuration",
 		"Show Configurations",
 		cmd_show_configurations,
 		NULL,

@@ -78,6 +78,84 @@ void parserInit(char *cliHost, cdb_t *sptr_cdb)
 
 extern cdb_node_t cmd_enable[];
 
+bool checkPartialStr(const char *prefix, const char *str)
+{
+    int lenPrefix = strlen(prefix);
+    int lenStr = strlen(str);
+    if (lenStr < lenPrefix)
+        return FALSE;
+    if (strncmp(prefix, str, lenPrefix) == 0)
+        return TRUE;
+    return FALSE;
+}
+
+bool checkCmdLineTokenMatch(cdb_node_t *cmdNode, const char *cmdLine,
+    bool fullMatch, unsigned int *matchIndex, unsigned int *matchCount)
+{
+    int curIter = 0, iter = 0, count = 0;
+
+    if (!cmdNode || !cmdLine || !matchIndex) {
+        printf ("Invalid usage of the libreary function\n");
+        return FALSE;
+    }
+    /* Browse through all the CMD subnodes first */
+    do {
+        curIter = iter;
+        if (cmdNode[iter].cmd_type == CMD_TYPE_CMD) {
+           if(strcmp(cmdNode[iter].cmd , cmdLine) == 0 ||
+                ((fullMatch == FALSE) &&
+                checkPartialStr(cmdLine, cmdNode[iter].cmd))) {
+                count++;
+                if (*matchIndex == 0)   /* Capture the first index Only */
+                    *matchIndex = iter;
+                //break;
+            }
+        }
+        iter++;
+    }while (!(cmdNode[curIter].flags & CMD_FLAG_LAST));
+
+    /* Browse through the non CMD sunnodes if no cmd matches*/
+    if (count == 0) { //No command matched
+        curIter = iter  = 0;
+        do {
+            curIter = iter;
+            switch (cmdNode[iter].cmd_type) {
+                case CMD_TYPE_STRING:
+                case CMD_TYPE_DECIMAL:
+                case CMD_TYPE_HEX:
+                case CMD_TYPE_IP:
+                    if (*matchIndex == 0)   /* Capture the first index Only */
+                        *matchIndex = iter;
+                    count++;
+                    break;
+                default:
+                    break;
+            }
+            iter++;
+        }while (!(cmdNode[curIter].flags & CMD_FLAG_LAST));
+    }
+
+    if (count) {
+        if (matchCount)
+            *matchCount = count;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+bool checkCmdLineMatch(cdb_node_t *cmdNode, const char *cmdLine,
+    unsigned int *matchIndex, unsigned int *matchCount)
+{
+    return checkCmdLineTokenMatch(cmdNode, cmdLine, FALSE, matchIndex,matchCount);
+}
+
+bool checkCmdLineMatchFull(cdb_node_t *cmdNode, const char *cmdLine,
+    unsigned int *matchIndex, unsigned int *matchCount)
+{
+    return checkCmdLineTokenMatch(cmdNode, cmdLine, TRUE, matchIndex, matchCount);
+}
+
+
 cdb_node_t * getCdbNode(char *cmdline)
 {
 	char delim[] = " "; // " ,-";
@@ -134,7 +212,7 @@ cdb_node_t * getCdbNextNode(char *cmdline)
 {
 	char delim[] = " "; // " ,-";
 	char *token;
-	int tokenCount = 0,  i = 0, subnode = 0;;
+	int tokenCount = 0,  i = 0, subnode = 0, curnode = 0, matchIndex = 0;
 	char tokenDb[CMD_MAX_TOKEN][CMD_MAX_TOKEN_LEN] = {{'\0'}};
     unsigned int tokenDbMatched[CMD_MAX_TOKEN] = {FALSE};
 	cdb_node_t *cmdRoot;
@@ -158,9 +236,7 @@ cdb_node_t * getCdbNextNode(char *cmdline)
 	{
 		strncpy(tokenDb[tokenCount++], token, sizeof(tokenDb[0]));
 	}
-
-	//cmdRoot = cmd_enable;
-
+#if 0
     while (i < tokenCount)
     {
         if(strcmp(cmdRoot[subnode].cmd , tokenDb[i]) == 0) {
@@ -201,14 +277,66 @@ cdb_node_t * getCdbNextNode(char *cmdline)
 
         i++;
     }
+#else
+   while (i < tokenCount)
+    {
+#if 0
+        subnode = 0;
+        do {
+            curnode = subnode;
+            if (cmdRoot[subnode].cmd_type == CMD_TYPE_CMD) {
+                if(strcmp(cmdRoot[subnode].cmd , tokenDb[i]) == 0 ||
+                    ((i != tokenCount-1) &&
+                     checkPartialStr(tokenDb[i], cmdRoot[subnode].cmd))) {
+                    cmdRoot = cmdRoot[subnode].next_node;
+                    tokenDbMatched[i] = 1;
+                    matchCount++;
+                    break;
+                }
+            } else if (cmdRoot[subnode].cmd_type == CMD_TYPE_STRING) {
+                /*
+                 * Check if tokenDb[i] is a plane string
+                 * if yes increment match as it matched
+                 * then jump to next node
+                 */
+            } else if (cmdRoot[subnode].cmd_type == CMD_TYPE_DECIMAL) {
+
+            }else if (cmdRoot[subnode].cmd_type == CMD_TYPE_HEX) {
+
+            }
+            subnode++;
+        }while (!(cmdRoot[curnode].flags & CMD_FLAG_LAST));
+#else
+        if (i != tokenCount-1) {
+            if (checkCmdLineMatch(cmdRoot, tokenDb[i], &matchIndex, NULL)) {
+                cmdRoot = cmdRoot[matchIndex].next_node;
+                tokenDbMatched[i] = 1;
+                matchCount++;
+            }
+        } else {
+            if (checkCmdLineMatchFull(cmdRoot, tokenDb[i], &matchIndex, NULL)) {
+                cmdRoot = cmdRoot[matchIndex].next_node;
+                tokenDbMatched[i] = 1;
+                matchCount++;
+            }
+        }
+#endif
+
+        if (cmdRoot == NULL)
+            break;
+        i++;
+    }
+#endif
+
 
     /* This is junk actually not needed */
     if (matchCount == 0 && strlen(cmdline) == 0)
         return NULL;
 
     /* if there is a token which is not first, check its prev token matched 
-        Revisit as this has to check if first token is a full word or a pracial */
-    //if (matchCount == 0 && tokenCount != 0)
+        Revisit as this has to check if first token is a full word or a pracially entered
+        in case of partial entered we still need to identify and auto complete this*/
+    //if (matchCount == 0 && tokenCount != 1)
     //return NULL;
 
     /* command has to match all token except last */ 
@@ -339,6 +467,7 @@ void execCmdNodeCallBack(int is_full_cmd, cdb_node_t *node, cdb_t *sptr_cdb)
     sptr_cdb->last_cmd_token = 0;
 }
 
+
 cdb_node_t * getCdbExecCli(char *cmdline)
 {
 	char delim[] = " "; // " ,-";
@@ -346,7 +475,8 @@ cdb_node_t * getCdbExecCli(char *cmdline)
 	int tokenCount = 0,  i = 0, subnode = 0, curnode = 0;
     int last_token = 0;
 	char tokenDb[CMD_MAX_TOKEN][CMD_MAX_TOKEN_LEN] = {{'\0'}};
-	cdb_node_t *cmdRoot;
+	cdb_node_t *cmdRoot = NULL;
+    cdb_node_t *tmpCmdRoot = NULL;
     char command[1024] = {0};
     int matchCount = 0;
     cdb_cmd_mode_t curr_mode =  CMD_MODE_MAX;
@@ -382,11 +512,11 @@ cdb_node_t * getCdbExecCli(char *cmdline)
         }
     }
 
-    if (tokenCount == 1 && ( 0 == strcmp(tokenDb[0], "exit") ||
-                0 == strcmp(tokenDb[0], "quit"))) {
-        if (0 == strcmp(tokenDb[0], "quit")) {
+    if (tokenCount == 1 && ( 0 == strcmp(tokenDb[0], "exit") || checkPartialStr(tokenDb[0], "exit") ||
+                0 == strcmp(tokenDb[0], "quit") || checkPartialStr(tokenDb[0], "quit"))) {
+        if (0 == strcmp(tokenDb[0], "quit") || checkPartialStr(tokenDb[0], "quit")) {
             prev_mode = getPrevCmdMode(curr_mode);
-        } else if (0 == strcmp(tokenDb[0], "exit")) {
+        } else if (0 == strcmp(tokenDb[0], "exit") || checkPartialStr(tokenDb[0], "exit")) {
             if (curr_mode == CMD_MODE_ENABLE)
                 prev_mode = CMD_MODE_ROOT;
             else if (curr_mode == CMD_MODE_ROOT)
@@ -398,13 +528,60 @@ cdb_node_t * getCdbExecCli(char *cmdline)
             setCmdModeParams(&g_sptr_cdb, prev_mode);
          return NULL;
     }
-	//cmdRoot = cmd_enable;
+
     i = 0;
+    tmpCmdRoot = cmdRoot;
+    while (i < tokenCount)
+    {
+        subnode = 0;
+        do{
+            curnode = subnode;
+            if(strcmp(tmpCmdRoot[subnode].cmd , tokenDb[i]) == 0 ||
+                checkPartialStr(tokenDb[i], tmpCmdRoot[subnode].cmd)) {
+                /* Check Shall this be a unique node to jump next
+                 * First check if its not the last element and if it is so
+                 * Keep searching the uniqueness in the next set of elements*/
+                if (checkPartialStr(tokenDb[i], tmpCmdRoot[subnode].cmd) &&
+                    !(tmpCmdRoot[subnode].flags & CMD_FLAG_LAST)) {
+                    int next = subnode+1;
+                    int nextCurNode = 0;
+                    do {
+                        nextCurNode = next;
+                        if (checkPartialStr(tokenDb[i], tmpCmdRoot[next].cmd))
+                            matchCount++;
+                        next++;
+                    }while(!(tmpCmdRoot[nextCurNode].flags & CMD_FLAG_LAST));
+                }
+                tmpCmdRoot = tmpCmdRoot[subnode].next_node;
+                matchCount++;
+                break;
+            }
+            subnode++;
+        }while (!(tmpCmdRoot[curnode].flags & CMD_FLAG_LAST));
+        if (tmpCmdRoot == NULL)
+            break;
+        i++;
+    }
+    /* check all token exactly matches in the cmd node to proceed in exec */
+    if (matchCount > tokenCount)
+    {
+        printf ("Ambgious Command!\n");
+        return NULL;
+    }
+    if (tokenCount != matchCount)
+    {
+        printf ("Unrecognized Command!\n");
+        return NULL;
+    }
+
+    i = 0;
+    matchCount = 0;
     while (i < tokenCount)
     {
         (i == (tokenCount-1))? (last_token = 1) : (last_token = 0);
         
-        if(strcmp(cmdRoot[subnode].cmd , tokenDb[i]) == 0) {
+        if(strcmp(cmdRoot[subnode].cmd , tokenDb[i]) == 0 ||
+            checkPartialStr(tokenDb[i], cmdRoot[subnode].cmd)) {
             execCmdNodeCallBack(last_token, &cmdRoot[subnode], &g_sptr_cdb);
             cmdRoot = cmdRoot[subnode].next_node;
             matchCount++;
@@ -418,7 +595,8 @@ cdb_node_t * getCdbExecCli(char *cmdline)
         do
         {
             curnode = subnode;
-            if(strcmp(cmdRoot[subnode].cmd , tokenDb[i]) == 0)
+            if(strcmp(cmdRoot[subnode].cmd , tokenDb[i]) == 0 ||
+                checkPartialStr(tokenDb[i], cmdRoot[subnode].cmd))
             {
                 execCmdNodeCallBack(last_token, &cmdRoot[subnode], &g_sptr_cdb);
                 cmdRoot = cmdRoot[subnode].next_node;
