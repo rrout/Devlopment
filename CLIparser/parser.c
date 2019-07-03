@@ -98,6 +98,9 @@ bool checkCmdLineTokenMatch(cdb_node_t *cmdNode, const char *cmdLine,
         printf ("Invalid usage of the libreary function\n");
         return FALSE;
     }
+    /* Initialize to  0 */
+    *matchIndex = 0;
+
     /* Browse through all the CMD subnodes first */
     do {
         curIter = iter;
@@ -472,7 +475,7 @@ cdb_node_t * getCdbExecCli(char *cmdline)
 {
 	char delim[] = " "; // " ,-";
 	char *token;
-	int tokenCount = 0,  i = 0, subnode = 0, curnode = 0;
+	int tokenCount = 0,  i = 0, subnode = 0, curnode = 0, matchIndex = 0, chkCount = 0;
     int last_token = 0;
 	char tokenDb[CMD_MAX_TOKEN][CMD_MAX_TOKEN_LEN] = {{'\0'}};
 	cdb_node_t *cmdRoot = NULL;
@@ -533,6 +536,7 @@ cdb_node_t * getCdbExecCli(char *cmdline)
     tmpCmdRoot = cmdRoot;
     while (i < tokenCount)
     {
+#if 0
         subnode = 0;
         do{
             curnode = subnode;
@@ -558,16 +562,30 @@ cdb_node_t * getCdbExecCli(char *cmdline)
             }
             subnode++;
         }while (!(tmpCmdRoot[curnode].flags & CMD_FLAG_LAST));
+#else
+        if (checkCmdLineMatch(tmpCmdRoot, tokenDb[i], &matchIndex, &chkCount)) {
+            if (chkCount > 1)
+            {
+                printf ("Ambgious Command!!!!!\n");
+                return NULL;
+            }
+            tmpCmdRoot = tmpCmdRoot[matchIndex].next_node;
+            matchCount++;
+        }
+
+#endif
         if (tmpCmdRoot == NULL)
             break;
         i++;
     }
+#if 0
     /* check all token exactly matches in the cmd node to proceed in exec */
     if (matchCount > tokenCount)
     {
         printf ("Ambgious Command!\n");
         return NULL;
     }
+#endif
     if (tokenCount != matchCount)
     {
         printf ("Unrecognized Command!\n");
@@ -579,7 +597,7 @@ cdb_node_t * getCdbExecCli(char *cmdline)
     while (i < tokenCount)
     {
         (i == (tokenCount-1))? (last_token = 1) : (last_token = 0);
-        
+#if 0        
         if(strcmp(cmdRoot[subnode].cmd , tokenDb[i]) == 0 ||
             checkPartialStr(tokenDb[i], cmdRoot[subnode].cmd)) {
             execCmdNodeCallBack(last_token, &cmdRoot[subnode], &g_sptr_cdb);
@@ -605,11 +623,17 @@ cdb_node_t * getCdbExecCli(char *cmdline)
             }
             subnode++;
         } while (!(cmdRoot[curnode].flags & CMD_FLAG_LAST));
-        
+#else
+    if (checkCmdLineMatch(cmdRoot, tokenDb[i], &matchIndex, &chkCount)) {
+        execCmdNodeCallBack(last_token, &cmdRoot[matchIndex], &g_sptr_cdb);
+        cmdRoot = cmdRoot[matchIndex].next_node;
+        matchCount++;
+    }
+#endif
         if (cmdRoot == NULL)
             break;
         i++;
-        /* Break is all token does not match */
+        /* Break if all token does not match  --- Junk */
         if (i != matchCount)
             break;
     }
