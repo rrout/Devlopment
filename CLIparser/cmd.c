@@ -73,101 +73,11 @@ void setCmdModeParams(cdb_t *sptr_cdb, cdb_cmd_mode_t mode)
 	snprintf(sptr_cdb->cmd_prompt,CMD_LEN,"%s",getCmdModePrompt(mode));
 }
 
-cdb_node_t cmd_root[] = {
-	{
-		CMD_MODE_ROOT,
-        CMD_TYPE_CMD,
-		"enable",
-		"Enable Command prompt for configuration",
-		enable_cmd_prompt,
-		NULL,
-		CMD_FLAG_LAST | CMD_FLAG_CR_ALLOWED
-	}
-};
+void cleanUpCdb(cdb_t *sptr_cdb)
+{
+    snprintf(sptr_cdb->curr_mode_usr_str, CMD_LINE_LEN, "%s", "");
+}
 
-cdb_node_t cmd_cfg_terminal[] = {
-	{
-		CMD_MODE_ENABLE,
-        CMD_TYPE_CMD,
-		"terminal",
-		"Config Terminal",
-		enable_config_terminal,
-		NULL,
-		CMD_FLAG_LAST | CMD_FLAG_CR_ALLOWED
-	}
-};
-
-cdb_node_t cmd_cfg[] = {
-	{
-		CMD_MODE_ENABLE,
-        CMD_TYPE_CMD,
-		"interface",
-		"Config interface",
-		config_interface,
-		NULL,
-		CMD_FLAG_NEXT
-	},
-    {
-		CMD_MODE_ENABLE,
-        CMD_TYPE_CMD,
-		"show",
-		"Show Commands",
-		NULL,
-		cmd_show,
-		CMD_FLAG_NEXT | CMD_FLAG_LAST
-	}
-};
-
-cdb_node_t cmd_show[] = {
-	{
-		CMD_MODE_NONE,
-        CMD_TYPE_CMD,
-		"version",
-		"Check Software Version",
-		cmd_show_version,
-		NULL,
-		CMD_FLAG_CR_ALLOWED
-	},
-    {
-        CMD_MODE_NONE,
-        CMD_TYPE_CMD,
-        "config-veriables",
-        "Show Global Config Variables",
-        cmd_show_global_config_ver,
-        NULL,
-        CMD_FLAG_CR_ALLOWED
-    },
-	{
-		CMD_MODE_NONE,
-        CMD_TYPE_CMD,
-		"configuration",
-		"Show Configurations",
-		cmd_show_configurations,
-		NULL,
-		CMD_FLAG_LAST | CMD_FLAG_CR_ALLOWED
-	}
-};
-
-cdb_node_t cmd_enable[] = {
-	{
-		CMD_MODE_ENABLE,
-        CMD_TYPE_CMD,
-		"config",
-		"Enable Configuration",
-		NULL,
-		cmd_cfg_terminal,
-		CMD_FLAG_NEXT
-	},
-	{
-		CMD_MODE_ENABLE,
-        CMD_TYPE_CMD,
-		"show",
-		"Show Commands",
-		NULL,
-		cmd_show,
-		CMD_FLAG_NEXT | CMD_FLAG_LAST
-	}
-};
 
 cdb_node_t * getCmdNodeFromMode(cdb_cmd_mode_t mode)
 {

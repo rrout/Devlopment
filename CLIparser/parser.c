@@ -123,6 +123,7 @@ bool checkCmdLineTokenMatch(cdb_node_t *cmdNode, const char *cmdLine,
         do {
             curIter = iter;
             switch (cmdNode[iter].cmd_type) {
+                case CMD_TYPE_IF_STRING:
                 case CMD_TYPE_STRING:
                 case CMD_TYPE_DECIMAL:
                 case CMD_TYPE_HEX:
@@ -469,14 +470,181 @@ void execCmdNodeCallBack(int is_full_cmd, cdb_node_t *node, cdb_t *sptr_cdb)
     }
     sptr_cdb->last_cmd_token = 0;
 }
+bool is_valid_if_line(char *cmdLine)
+{
+    int i = 0;
+    unsigned int length = 0;
+    if (!cmdLine)
+        return FALSE;
+    length = strlen(cmdLine);
+    for (i=0;i<length; i++) {
+        /*if (i > 0) {
+            if (cmdLine[i] == '-' || cmdLine[i] == ',') {
+                if (cmdLine[i-1] == '-' || cmdLine[i-1] == ',') {
+                    return FALSE;
+                }
+            }
+        }*/
+        if ((i > 0) && (cmdLine[i] == '-' || cmdLine[i] == ',') &&
+            (cmdLine[i-1] == '-' || cmdLine[i-1] == ','))
+            return FALSE;
 
+        if (isdigit(cmdLine[i]) || cmdLine[i] == '-' || cmdLine[i] == ',' )
+            continue;
+        else
+            return FALSE;
+    }
+
+    if (cmdLine[0] == '-' || cmdLine[0] == ',')
+        return FALSE;
+    if((length > 1) && (cmdLine[length-1] == '-' || cmdLine[length-1] == ','))
+        return FALSE;
+
+    return TRUE;
+}
+
+int setIfBit(unsigned int *if_map, unsigned int bit)
+{
+    if (!if_map)
+        return 0;
+    if (bit > MAX_IF_BITS) {
+        printf("%s: bit %d ig greater than MAX_IF_BITS\n",__FUNCTION__, bit);
+        return 0;
+    }
+
+    *if_map |= 1<<bit;
+}
+
+bool ifLineToIfMap(char *cmdLine, unsigned int *if_map)
+{
+    char line[CMD_LEN];
+    char *delim = "-,";
+    int to = 0, from = 0, i = 0;
+    char *res = NULL;
+    int bit = 0;
+    int tokenArr[MAX_IF_BITS+MAX_IF_BITS] = {0};
+    int elemCount = 0;
+    int last_set_bit = 0;
+
+    if (!cmdLine || !if_map || !is_valid_if_line(cmdLine))
+    {
+        printf("Invalid Line %s\n", cmdLine);
+        return FALSE;
+    }
+
+    strcpy(line, cmdLine);
+    res = strtok(line, delim);
+#if 0
+    while (res) {
+        printf("%s\n",res);
+        tokenArr[
+        bit = atoi(res);
+        if(!setIfBit(if_map, bit))
+            return FALSE;
+        from = res-line+strlen(res);
+        res = strtok( NULL, delim );
+        to = res != NULL ? res-line : strlen(cmdLine);
+        // Print delimeter
+        printf("%.*s\n", to-from, cmdLine+from);
+
+    }
+#else
+    while (res) {
+        //printf("%s",res);
+        tokenArr[elemCount++] = atoi(res);
+        //printf("%c", cmdLine[res-line+strlen(res)]);
+        if (cmdLine[res-line+strlen(res)] == '-')
+            tokenArr[elemCount++] = IF_SEPARATOR_DASH;
+        if (cmdLine[res-line+strlen(res)] == ',')
+            tokenArr[elemCount++] = IF_SEPARATOR_COMA;
+        res = strtok( NULL, delim );
+    }
+    //printf("\n");
+
+    last_set_bit = 0;
+    for( i = 0 ; i < elemCount; i++ )
+    {
+        //printf("%d  ",tokenArr[i]);
+        if(tokenArr[i] != IF_SEPARATOR_DASH && tokenArr[i] != IF_SEPARATOR_COMA) {
+            if (last_set_bit && last_set_bit > tokenArr[i]) {
+                //printf("Invalid if config : %s\n", cmdLine);
+                return FALSE;
+            }
+            last_set_bit = tokenArr[i];
+        }
+    }
+    //printf("\n");
+
+    last_set_bit = 0;
+    for( i = 0 ; i < elemCount; i++ )
+    {
+        if (i == 0) {
+            setIfBit(if_map, tokenArr[i]);
+            last_set_bit = tokenArr[i];
+        }
+        else
+        {
+            if(tokenArr[i] != IF_SEPARATOR_DASH && tokenArr[i] != IF_SEPARATOR_COMA) {
+                setIfBit(if_map, tokenArr[i]);
+                if((tokenArr[i-1] == IF_SEPARATOR_DASH))
+                {
+                    int iter = 0;
+                    for (iter = last_set_bit; iter < tokenArr[i]; iter++)
+                        setIfBit(if_map, iter);
+                }
+                last_set_bit = tokenArr[i];
+            }
+        }
+    }
+#endif
+    return TRUE;
+}
+
+bool ifMapToIfLine(unsigned int *if_map, char *ifLine)
+{
+    int i;
+    if (!ifLine || !if_map) {
+        printf("Invalid Args %s\n", __FUNCTION__);
+        return FALSE;
+    }
+}
+
+
+bool execCmdNodeParseToken(int last_token, cdb_cmd_type_t cmd_type, char *cmdToken, cdb_t *sptr_cdb)
+{
+    unsigned int if_map = 0;
+    bool ret = TRUE;
+
+    if (!cmdToken || !sptr_cdb)
+    {
+        printf ("Unknown Args\n");
+        return FALSE;
+    }
+    switch (cmd_type)
+    {
+        case CMD_TYPE_IF_STRING:
+            {
+                ret = ifLineToIfMap(cmdToken, &if_map);
+                if (ret == TRUE) {
+                    sptr_cdb->if_map = if_map;
+                    strncpy(sptr_cdb->if_str, cmdToken, CMD_LINE_LEN);
+                }
+            }
+            break;
+        default:
+            ret = TRUE;
+            break;
+    }
+
+    return ret;
+}
 
 cdb_node_t * getCdbExecCli(char *cmdline)
 {
 	char delim[] = " "; // " ,-";
 	char *token;
 	int tokenCount = 0,  i = 0, subnode = 0, curnode = 0, matchIndex = 0, chkCount = 0;
-    int last_token = 0;
+    int last_token = 0, ret = 0;
 	char tokenDb[CMD_MAX_TOKEN][CMD_MAX_TOKEN_LEN] = {{'\0'}};
 	cdb_node_t *cmdRoot = NULL;
     cdb_node_t *tmpCmdRoot = NULL;
@@ -527,8 +695,10 @@ cdb_node_t * getCdbExecCli(char *cmdline)
             else
                 prev_mode = CMD_MODE_ENABLE;
         }
-        if (prev_mode != CMD_MODE_MAX)
+        if (prev_mode != CMD_MODE_MAX) {
             setCmdModeParams(&g_sptr_cdb, prev_mode);
+            cleanUpCdb(&g_sptr_cdb);
+        }
          return NULL;
     }
 
@@ -625,6 +795,10 @@ cdb_node_t * getCdbExecCli(char *cmdline)
         } while (!(cmdRoot[curnode].flags & CMD_FLAG_LAST));
 #else
     if (checkCmdLineMatch(cmdRoot, tokenDb[i], &matchIndex, &chkCount)) {
+        ret = execCmdNodeParseToken(last_token,
+            cmdRoot[matchIndex].cmd_type, tokenDb[i], &g_sptr_cdb);
+        if (ret == FALSE)
+            return NULL;
         execCmdNodeCallBack(last_token, &cmdRoot[matchIndex], &g_sptr_cdb);
         cmdRoot = cmdRoot[matchIndex].next_node;
         matchCount++;

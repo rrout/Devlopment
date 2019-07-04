@@ -156,8 +156,9 @@ void cmdLineStart(char *cliHost, cdb_t *sptr_cdb)
 	/* Loop reading and executing lines until the user quits. */
 	for ( ; done == 0; )
     {
-		snprintf(prompt, sizeof(prompt), "%s(%s)%s ",
-            sptr_cdb->cmd_hostname, sptr_cdb->curr_mode_str, sptr_cdb->cmd_prompt);
+		snprintf(prompt, sizeof(prompt), "%s(%s)%s%s ",
+            sptr_cdb->cmd_hostname, sptr_cdb->curr_mode_str,
+            sptr_cdb->curr_mode_usr_str, sptr_cdb->cmd_prompt);
 		line = readline (prompt);
 
 		if (!line)

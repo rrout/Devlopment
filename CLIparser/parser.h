@@ -15,6 +15,10 @@ typedef enum {
 #define CMD_MAX_TOKEN       20
 #define CMD_MAX_TOKEN_LEN   50
 
+#define MAX_IF_BITS         31
+#define IF_SEPARATOR_COMA   0xFFFF
+#define IF_SEPARATOR_DASH   IF_SEPARATOR_COMA-1
+
 void parser(cdb_t *cur_sptr_cdb, char *cmdline);
 void parserInit(char *cliHost, cdb_t *sptr_cdb);
 void parserCliSrart(char *cliHost);

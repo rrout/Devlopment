@@ -26,6 +26,7 @@ typedef enum {
 
 typedef enum {
     CMD_TYPE_CMD,
+    CMD_TYPE_IF_STRING,
     CMD_TYPE_STRING,
     CMD_TYPE_DECIMAL,
     CMD_TYPE_HEX,
@@ -37,8 +38,11 @@ typedef struct _cdb {
 	char cmd_hostname[CMD_HOST_NAME_LEN];
 	cdb_cmd_mode_t mode;
 	char curr_mode_str[CMD_LEN];
+    char curr_mode_usr_str[CMD_LINE_LEN];
 	char cmd_prompt[2];
     unsigned int last_cmd_token;
+    unsigned int if_map;
+    char if_str[CMD_LINE_LEN];
 	unsigned int number1;
 	unsigned int number2;
 	unsigned int number3;
@@ -65,7 +69,7 @@ typedef struct _cdb {
 
 typedef struct _cdb_node {
 	unsigned int mode_flags;
-    unsigned int cmd_type;
+    cdb_cmd_type_t cmd_type;
 	char cmd[CMD_LEN];
 	char cmd_desc[CMD_DESC_LEN];
 	void (*cmd_callback) (cdb_t *sptr_cdb);
@@ -108,5 +112,6 @@ void setCmdModeParams(cdb_t *sptr_cdb, cdb_cmd_mode_t mode);
 cdb_node_t * getCmdNodeFromMode(cdb_cmd_mode_t mode);
 cdb_node_t * getPrevCmdNodeFromMode(cdb_cmd_mode_t mode);
 cdb_cmd_mode_t getPrevCmdModeFromMode(cdb_cmd_mode_t mode);
+void cleanUpCdb(cdb_t *sptr_cdb);
 
 #endif /*__CMD_H__*/

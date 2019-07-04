@@ -4,39 +4,135 @@
 
 #include "parser.h"
 #include "cmd.h"
+#include "cmd_list.h"
 
-void enable_config_terminal(cdb_t *sptr_cdb)
-{
-    setCmdModeParams(sptr_cdb, CMD_MODE_CONFIG);
-}
-void cmd_show_version(cdb_t *sptr_cdb)
-{
-    if (sptr_cdb->last_cmd_token == 0)
-        return;
-    printf ("CLI Parser V.0.01\n");
-}
-void cmd_show_configurations(cdb_t *sptr_cdb)
-{
-    if (sptr_cdb->last_cmd_token == 0)
-        return;
-    printf ("====== Current Saved Configuration ========\n");
-}
-void cmd_show_global_config_ver(cdb_t *sptr_cdb)
-{
-    if (sptr_cdb->last_cmd_token == 0)
-        return;
-    printf ("====== Current Global Config List ========\n");
-    printf ("\n");
-}
 
-void enable_cmd_prompt(cdb_t *sptr_cdb)
-{
-    setCmdModeParams(sptr_cdb, CMD_MODE_ENABLE);
-}
+cdb_node_t cmd_root[] = {
+	{
+		CMD_MODE_ROOT,
+        CMD_TYPE_CMD,
+		"enable",
+		"Enable Command prompt for configuration",
+		enable_cmd_prompt,
+		NULL,
+		CMD_FLAG_LAST | CMD_FLAG_CR_ALLOWED
+	}
+};
 
-void config_interface(cdb_t *sptr_cdb)
-{
+cdb_node_t cmd_cfg_terminal[] = {
+	{
+		CMD_MODE_ENABLE,
+        CMD_TYPE_CMD,
+		"terminal",
+		"Config Terminal",
+		enable_config_terminal,
+		NULL,
+		CMD_FLAG_LAST | CMD_FLAG_CR_ALLOWED
+	}
+};
 
-}
+cdb_node_t cfg_if_type[] = {
+	{
+		CMD_MODE_CONFIG,
+        CMD_TYPE_CMD,
+		"ethernet",
+		"Ethernet Interface",
+		config_if_type_enet,
+		cfg_if_list,
+		CMD_FLAG_NEXT
+	},
+    {
+		CMD_MODE_CONFIG,
+        CMD_TYPE_CMD,
+		"mgmt",
+		"Management Interface",
+		config_if_type_mgmt,
+		cfg_if_list,
+		CMD_FLAG_LAST | CMD_FLAG_NEXT
+	},
+};
 
+cdb_node_t cfg_if_list[] = {
+	{
+		CMD_MODE_CONFIG,
+        CMD_TYPE_IF_STRING,
+		"",
+		"If Or If List (1,3-5,7) ",
+		config_if_list,
+		NULL,
+		CMD_FLAG_LAST | CMD_FLAG_CR_ALLOWED
+	}
+};
+
+cdb_node_t cmd_cfg[] = {
+	{
+		CMD_MODE_ENABLE,
+        CMD_TYPE_CMD,
+		"interface",
+		"Config interface",
+		config_interface,
+		cfg_if_type,
+		CMD_FLAG_NEXT
+	},
+    {
+		CMD_MODE_ENABLE,
+        CMD_TYPE_CMD,
+		"show",
+		"Show Commands",
+		NULL,
+		cmd_show,
+		CMD_FLAG_NEXT | CMD_FLAG_LAST
+	}
+};
+
+cdb_node_t cmd_show[] = {
+	{
+		CMD_MODE_NONE,
+        CMD_TYPE_CMD,
+		"version",
+		"Check Software Version",
+		cmd_show_version,
+		NULL,
+		CMD_FLAG_CR_ALLOWED
+	},
+    {
+        CMD_MODE_NONE,
+        CMD_TYPE_CMD,
+        "config-veriables",
+        "Show Global Config Variables",
+        cmd_show_global_config_ver,
+        NULL,
+        CMD_FLAG_CR_ALLOWED
+    },
+	{
+		CMD_MODE_NONE,
+        CMD_TYPE_CMD,
+		"configuration",
+		"Show Configurations",
+		cmd_show_configurations,
+		NULL,
+		CMD_FLAG_LAST | CMD_FLAG_CR_ALLOWED
+	}
+};
+
+cdb_node_t cmd_enable[] = {
+	{
+		CMD_MODE_ENABLE,
+        CMD_TYPE_CMD,
+		"config",
+		"Enable Configuration",
+		NULL,
+		cmd_cfg_terminal,
+		CMD_FLAG_NEXT
+	},
+	{
+		CMD_MODE_ENABLE,
+        CMD_TYPE_CMD,
+		"show",
+		"Show Commands",
+		NULL,
+		cmd_show,
+		CMD_FLAG_NEXT | CMD_FLAG_LAST
+	}
+};
 
