@@ -16,6 +16,10 @@ extern cdb_node_t cfg_if_type[];
 extern cdb_node_t cfg_if_list[];
 extern cdb_node_t cmd_cfg[];
 extern cdb_node_t cmd_show[];
+extern cdb_node_t cmd_set_debug_val[];
+extern cdb_node_t cmd_debug[];
+extern cdb_node_t cmd_undebug[];
+
 /*
  * NODE call backs
  */
@@ -30,4 +34,8 @@ void config_if_type_mgmt(cdb_t *sptr_cdb);
 void config_if_list(cdb_t *sptr_cdb);
 void config_if_enable(cdb_t *sptr_cdb);
 void config_if_disable(cdb_t *sptr_cdb);
+void cmd_set_dbg_level(cdb_t *sptr_cdb);
+void cmd_set_dbg_all(cdb_t *sptr_cdb);
+void cmd_set_undbg_all(cdb_t *sptr_cdb);
+void cmd_set_dbg_level_val(cdb_t *sptr_cdb);
 #endif /*__CMD_LIST_H__*/

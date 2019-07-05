@@ -37,11 +37,18 @@ void enable_cmd_prompt(cdb_t *sptr_cdb)
 void config_interface(cdb_t *sptr_cdb)
 {
     setCmdModeParams(sptr_cdb, CMD_MODE_IF);
+    printf ("Configuring if: %s\n",sptr_cdb->curr_mode_usr_str);
 }
 
 void config_if_type_enet(cdb_t *sptr_cdb)
 {
+    char str[255] = {0};
+    char type_char = 'e';
+
     sptr_cdb->if_type =  IF_TYPE_ETH;
+    extern bool ifMapToIfLine(unsigned int *if_map, char *ifLine);
+    ifMapToIfLine(&sptr_cdb->if_map, str);
+    sprintf(sptr_cdb->curr_mode_usr_str, "(%c-%s)", type_char, str);
 }
 
 void config_if_type_mgmt(cdb_t *sptr_cdb)
@@ -61,7 +68,7 @@ void config_if_list(cdb_t *sptr_cdb)
         type_char = 'm';
     extern bool ifMapToIfLine(unsigned int *if_map, char *ifLine);
     ifMapToIfLine(&sptr_cdb->if_map, str);
-    printf ("Configuring if: %x(%s)---%s\n", sptr_cdb->if_map, sptr_cdb->if_str, str);
+    printf ("Parsing if: %x(%s)---%s\n", sptr_cdb->if_map, sptr_cdb->if_str, str);
     sprintf(sptr_cdb->curr_mode_usr_str, "(%c-%s)", type_char, str);
 }
 void config_if_enable(cdb_t *sptr_cdb)
@@ -76,4 +83,21 @@ void config_if_disable(cdb_t *sptr_cdb)
         return;
 }
 
+void cmd_set_dbg_level(cdb_t *sptr_cdb)
+{
+
+}
+
+void cmd_set_dbg_all(cdb_t *sptr_cdb)
+{
+}
+
+void cmd_set_undbg_all(cdb_t *sptr_cdb)
+{
+}
+
+void cmd_set_dbg_level_val(cdb_t *sptr_cdb)
+{
+
+}
 

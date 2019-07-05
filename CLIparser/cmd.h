@@ -7,12 +7,24 @@
 #define CMD_LEN				        20
 #define CMD_DESC_LEN		        255
 #define CMD_LINE_LEN		        255
+#define CMD_MAX_TOKEN               20
+#define CMD_MAX_TOKEN_LEN           50
 #define CMD_HOST_NAME_LEN	        55
+
 
 #define CMD_FLAG_FIRST              1 << 0
 #define CMD_FLAG_LAST               1 << 1
 #define CMD_FLAG_NEXT               1 << 2
 #define CMD_FLAG_CR_ALLOWED         1 << 3
+
+#define CMD_DBG_LEVEL_ALL   1 << 0
+#define CMD_DBG_LEVEL_1     1 << 1
+#define CMD_DBG_LEVEL_2     1 << 2
+
+typedef enum {
+    FALSE = 0,
+    TRUE  = 1,
+}bool;
 
 typedef enum {
 	CMD_MODE_ROOT,
@@ -81,6 +93,17 @@ typedef struct _cdb_node {
 	unsigned int flags;
 }cdb_node_t;
 
+typedef struct _cdb_cb {
+    char cmd[CMD_LEN];
+    bool last_node;
+    void (*cmd_callback) (cdb_t *sptr_cdb);
+}cdb_cb_t;
+
+typedef struct _cdb_cb_stack {
+    int numNodes;
+    cdb_cb_t cb[CMD_MAX_TOKEN];
+}cdb_cb_stack_t;
+
 typedef struct _mode_map {
     cdb_cmd_mode_t prevMode;
     cdb_cmd_mode_t mode;
@@ -100,6 +123,9 @@ typedef struct _mode_map {
 }cdb_cmd_flag_t;*/
 
 
+extern unsigned int g_cli_dbg;
+
+
 extern cdb_node_t cmd_root[];
 extern cdb_node_t cmd_enable[];
 extern cdb_node_t cmd_cfg[];
@@ -116,6 +142,10 @@ void setCmdModeParams(cdb_t *sptr_cdb, cdb_cmd_mode_t mode);
 cdb_node_t * getCmdNodeFromMode(cdb_cmd_mode_t mode);
 cdb_node_t * getPrevCmdNodeFromMode(cdb_cmd_mode_t mode);
 cdb_cmd_mode_t getPrevCmdModeFromMode(cdb_cmd_mode_t mode);
+bool cmdNodeInsertCbStack(cdb_cb_stack_t *cbStack, cdb_node_t *node, bool last_node);
+bool cmdCheckBuildCallBackStack(int is_full_cmd, cdb_node_t *node, cdb_cb_stack_t *cbStack);
+void cmdPrintCbStack(cdb_cb_stack_t *cbStack);
+void cmdExecCbStack(cdb_cb_stack_t *cbStack, cdb_t *sptr_cdb);
 void cleanUpCdb(cdb_t *sptr_cdb);
 
 #endif /*__CMD_H__*/

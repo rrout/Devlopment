@@ -7,13 +7,6 @@
 
 #include "cmd.h"
 
-typedef enum {
-	FALSE = 0,
-	TRUE  = 1,
-}bool;
-
-#define CMD_MAX_TOKEN       20
-#define CMD_MAX_TOKEN_LEN   50
 
 #define MAX_IF_BITS         31
 #define IF_SEPARATOR_COMA   0xFFFF
@@ -24,6 +17,12 @@ typedef enum {
 #define IF_TYPE_SONET       3
 #define IF_TYPE_ATM         4
 #define IF_TYPE_PPP         5
+
+
+#define cprintf             printf
+#define dprintf(_dlevel, _dargs) \
+                                if(g_cli_dbg & _dlevel) \
+                                    printf _dargs
 
 void parser(cdb_t *cur_sptr_cdb, char *cmdline);
 void parserInit(char *cliHost, cdb_t *sptr_cdb);

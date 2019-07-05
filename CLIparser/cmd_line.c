@@ -125,7 +125,6 @@ command_generator (const char *text, int state)
 
 		if (strncmp (name, text, len) == 0)
             return (dupstr(name));
-            //return strdup(name);
 
 		//if(cmdNode[list_index].flags & CMD_FLAG_LAST)
         if (list_index > num_index)
@@ -182,8 +181,7 @@ void cmdLineStart(char *cliHost, cdb_t *sptr_cdb)
 
 void cmdCLIStart(char *cliHost)
 {
-	//cdb_t sptr_cdb;
-    //memset(&sptr_cdb, 0, sizeof(sptr_cdb));
+    memset(&g_sptr_cdb, 0, sizeof(g_sptr_cdb));
     cmdLineStart(cliHost, &g_sptr_cdb);
 }
 
