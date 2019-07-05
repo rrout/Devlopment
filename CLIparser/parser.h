@@ -19,6 +19,12 @@ typedef enum {
 #define IF_SEPARATOR_COMA   0xFFFF
 #define IF_SEPARATOR_DASH   IF_SEPARATOR_COMA-1
 
+#define IF_TYPE_ETH         1
+#define IF_TYPE_MGMT        2
+#define IF_TYPE_SONET       3
+#define IF_TYPE_ATM         4
+#define IF_TYPE_PPP         5
+
 void parser(cdb_t *cur_sptr_cdb, char *cmdline);
 void parserInit(char *cliHost, cdb_t *sptr_cdb);
 void parserCliSrart(char *cliHost);

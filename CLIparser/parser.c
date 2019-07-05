@@ -603,9 +603,43 @@ bool ifLineToIfMap(char *cmdLine, unsigned int *if_map)
 bool ifMapToIfLine(unsigned int *if_map, char *ifLine)
 {
     int i;
+    int setVal = 0, increnented = 0, set = 0;
+    char buf[80] = {0};
     if (!ifLine || !if_map) {
         printf("Invalid Args %s\n", __FUNCTION__);
         return FALSE;
+    }
+    set = 1;
+    for (i = 0; i < 32; i++) {
+        if (*if_map & (1 << i)){
+            if (setVal && i == (setVal+1)) {
+                setVal = i;
+                increnented = 1;
+            } else if (setVal && i > (setVal+1)) {
+                if (increnented) {
+                    strcat(ifLine, "-");
+                    sprintf(buf,"%d",setVal);
+                    strcat(ifLine, buf);
+                    strcat(ifLine, ",");
+                } else {
+                    strcat(ifLine, ",");
+                }
+                set = 1;
+            }
+
+            if (set) {
+                sprintf(buf,"%d", i);
+                strcat(ifLine, buf);
+                setVal = i;
+                increnented = 0;
+                set = 0;
+            }
+        }
+    }
+    if (increnented) {
+        strcat(ifLine, "-");
+        sprintf(buf,"%d",setVal);
+        strcat(ifLine, buf);
     }
 }
 

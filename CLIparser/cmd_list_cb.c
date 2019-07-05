@@ -41,18 +41,39 @@ void config_interface(cdb_t *sptr_cdb)
 
 void config_if_type_enet(cdb_t *sptr_cdb)
 {
+    sptr_cdb->if_type =  IF_TYPE_ETH;
 }
 
 void config_if_type_mgmt(cdb_t *sptr_cdb)
-{}
+{
+    sptr_cdb->if_type =  IF_TYPE_MGMT;
+}
 
 void config_if_list(cdb_t *sptr_cdb)
 {
     if (sptr_cdb->last_cmd_token == 0)
         return;
-    printf ("Configuring if: %x(%s)\n", sptr_cdb->if_map, sptr_cdb->if_str);
-    sprintf(sptr_cdb->curr_mode_usr_str, "(%s)", sptr_cdb->if_str);
+    char str[255] = {0};
+    char type_char = ' ';
+    if (sptr_cdb->if_type == IF_TYPE_ETH)
+        type_char = 'e';
+    if (sptr_cdb->if_type == IF_TYPE_MGMT)
+        type_char = 'm';
+    extern bool ifMapToIfLine(unsigned int *if_map, char *ifLine);
+    ifMapToIfLine(&sptr_cdb->if_map, str);
+    printf ("Configuring if: %x(%s)---%s\n", sptr_cdb->if_map, sptr_cdb->if_str, str);
+    sprintf(sptr_cdb->curr_mode_usr_str, "(%c-%s)", type_char, str);
+}
+void config_if_enable(cdb_t *sptr_cdb)
+{
+    if (sptr_cdb->last_cmd_token == 0)
+        return;
 }
 
+void config_if_disable(cdb_t *sptr_cdb)
+{
+    if (sptr_cdb->last_cmd_token == 0)
+        return;
+}
 
 

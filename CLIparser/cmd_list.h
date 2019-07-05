@@ -11,6 +11,7 @@
 extern cdb_node_t cmd_root[];
 extern cdb_node_t cmd_enable[];
 extern cdb_node_t cmd_cfg_terminal[];
+extern cdb_node_t cmd_cfg_if[];
 extern cdb_node_t cfg_if_type[];
 extern cdb_node_t cfg_if_list[];
 extern cdb_node_t cmd_cfg[];
@@ -27,4 +28,6 @@ void config_interface(cdb_t *sptr_cdb);
 void config_if_type_enet(cdb_t *sptr_cdb);
 void config_if_type_mgmt(cdb_t *sptr_cdb);
 void config_if_list(cdb_t *sptr_cdb);
+void config_if_enable(cdb_t *sptr_cdb);
+void config_if_disable(cdb_t *sptr_cdb);
 #endif /*__CMD_LIST_H__*/

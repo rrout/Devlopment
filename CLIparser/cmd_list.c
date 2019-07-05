@@ -64,6 +64,45 @@ cdb_node_t cfg_if_list[] = {
 	}
 };
 
+cdb_node_t cmd_cfg_if[] = {
+    {
+		CMD_MODE_CONFIG,
+        CMD_TYPE_CMD,
+		"interface",
+		"Config interface",
+		config_interface,
+		cfg_if_type,
+		CMD_FLAG_NEXT
+	},
+    {
+        CMD_MODE_IF,
+        CMD_TYPE_CMD,
+        "enable",
+        "Enable Interface",
+        config_if_enable,
+        NULL,
+        CMD_FLAG_CR_ALLOWED
+    },
+    {
+        CMD_MODE_IF,
+        CMD_TYPE_CMD,
+        "disable",
+        "Disable Interface",
+        config_if_disable,
+        NULL,
+        CMD_FLAG_CR_ALLOWED
+    },
+    {
+		CMD_MODE_ENABLE,
+        CMD_TYPE_CMD,
+		"show",
+		"Show Commands",
+		NULL,
+		cmd_show,
+		CMD_FLAG_NEXT | CMD_FLAG_LAST
+	}
+};
+
 cdb_node_t cmd_cfg[] = {
 	{
 		CMD_MODE_ENABLE,

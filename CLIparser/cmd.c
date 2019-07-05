@@ -7,12 +7,12 @@
 #include "parser.h"
 
 mode_map_t g_mode_map[CMD_MODE_MAX] = {
-    {CMD_MODE_MAX, CMD_MODE_ROOT, "root", "$", cmd_root},
-    {CMD_MODE_ROOT, CMD_MODE_ENABLE, "config-enable", ">", cmd_enable},
-    {CMD_MODE_ENABLE , CMD_MODE_CONFIG, "config-term", "#",cmd_cfg},
-    {CMD_MODE_CONFIG, CMD_MODE_IF, "config-if", "#", cmd_cfg},
-    {CMD_MODE_CONFIG, CMD_MODE_MIF, "config-mif", "#", cmd_cfg},
-    {CMD_MODE_CONFIG , CMD_MODE_NONE, "config-none", "#", cmd_cfg},
+    {CMD_MODE_MAX,     CMD_MODE_ROOT,   "root",          "$", cmd_root},
+    {CMD_MODE_ROOT,    CMD_MODE_ENABLE, "config-enable", ">", cmd_enable},
+    {CMD_MODE_ENABLE , CMD_MODE_CONFIG, "config-term",   "#", cmd_cfg},
+    {CMD_MODE_CONFIG,  CMD_MODE_IF,     "config-if",     "#", cmd_cfg_if},
+    {CMD_MODE_CONFIG,  CMD_MODE_MIF,    "config-mif",    "#", cmd_cfg},
+    {CMD_MODE_CONFIG , CMD_MODE_NONE,   "config-none",   "#", cmd_cfg},
 };
 
 char * getCmdModeStr(cdb_cmd_mode_t mode)

@@ -4,15 +4,15 @@
 
 #ifndef __CMD_H__
 #define __CMD_H__
-#define CMD_LEN				20
-#define CMD_DESC_LEN		255
-#define CMD_LINE_LEN		255
-#define CMD_HOST_NAME_LEN	55
+#define CMD_LEN				        20
+#define CMD_DESC_LEN		        255
+#define CMD_LINE_LEN		        255
+#define CMD_HOST_NAME_LEN	        55
 
-#define CMD_FLAG_FIRST            1 << 0
-#define CMD_FLAG_LAST             1 << 1
-#define CMD_FLAG_NEXT             1 << 2
-#define CMD_FLAG_CR_ALLOWED       1 << 3
+#define CMD_FLAG_FIRST              1 << 0
+#define CMD_FLAG_LAST               1 << 1
+#define CMD_FLAG_NEXT               1 << 2
+#define CMD_FLAG_CR_ALLOWED         1 << 3
 
 typedef enum {
 	CMD_MODE_ROOT,
@@ -41,8 +41,11 @@ typedef struct _cdb {
     char curr_mode_usr_str[CMD_LINE_LEN];
 	char cmd_prompt[2];
     unsigned int last_cmd_token;
+
+    unsigned char if_type;
     unsigned int if_map;
     char if_str[CMD_LINE_LEN];
+
 	unsigned int number1;
 	unsigned int number2;
 	unsigned int number3;
@@ -54,6 +57,7 @@ typedef struct _cdb {
 	unsigned int number9;
 	unsigned int number10;
 	unsigned int number11;
+
 	char str1[CMD_LEN];
 	char str2[CMD_LEN];
 	char str3[CMD_LEN];
