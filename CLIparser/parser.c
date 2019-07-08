@@ -114,7 +114,7 @@ bool checkCmdLineTokenMatch(cdb_node_t *cmdNode, const char *cmdLine,
     }while (!(cmdNode[curIter].flags & CMD_FLAG_LAST));
 
     /* Browse through the non CMD sunnodes if no cmd matches*/
-    if (count == 0) { //No command matched
+    if (count == 0 && 0 != strcmp(cmdLine, "?")) { //No command matched
         curIter = iter  = 0;
         do {
             curIter = iter;
@@ -302,7 +302,7 @@ void showCmdNodeOptions(cdb_node_t *node)
             node_iter++;
         }while (!(node[curnode].flags & CMD_FLAG_LAST));
     } else {
-        printf ("Unknown Command\n");
+        printf ("Unknown Command Option\n");
     }
 }
 
@@ -321,7 +321,8 @@ cdb_node_t *showHelp(char *cmdline)
 {
     char delim[] = " ";
     char *token;
-    int tokenCount = 0,  i = 0, subnode = 0, curnode = 0, matchCount = 0;
+    int tokenCount = 0,  i = 0, matchCount = 0;
+    unsigned int matchIndex = 0, chkCount = 0;
     char tokenDb[CMD_MAX_TOKEN][CMD_MAX_TOKEN_LEN] = {{'\0'}};
     cdb_cmd_mode_t curr_mode =  CMD_MODE_MAX;
     cdb_node_t *cmdRoot = NULL;
@@ -334,12 +335,12 @@ cdb_node_t *showHelp(char *cmdline)
     cmdRoot = getCmdNodeFromMode(curr_mode);
     if (!cmdRoot)
     {
-        printf ("Unknown Command\n");
+        printf ("Unknown Command...........\n");
         return NULL;
     }
     for (token = strtok(command, delim); token; token = strtok(NULL, delim))
         strncpy(tokenDb[tokenCount++], token, sizeof(tokenDb[0]));
-
+#if 0
     while (i < tokenCount)
     {
         subnode = 0;
@@ -359,6 +360,19 @@ cdb_node_t *showHelp(char *cmdline)
             break;
         i++;
     }
+#else
+    while (i < tokenCount)
+    {
+        if (checkCmdLineMatch(cmdRoot, tokenDb[i], &matchIndex, &chkCount)) {
+            cmdRoot = cmdRoot[matchIndex].next_node;
+            matchCount++;
+        }
+        if (!cmdRoot)
+            break;
+        i++;
+    }
+#endif
+
     if((tokenCount - matchCount) > 1)
     {
         printf ("Unknown Command\n");
@@ -564,34 +578,61 @@ bool ifMapToIfLine(unsigned int *if_map, char *ifLine)
     return TRUE;
 }
 
-
-bool execCmdNodeParseToken(int last_token, cdb_cmd_type_t cmd_type, char *cmdToken, cdb_t *sptr_cdb)
+bool decimalLineToDecimal(char *cmdLine, unsigned int *decimal)
 {
-    unsigned int if_map = 0;
-    bool ret = TRUE;
-
-    if (!cmdToken || !sptr_cdb)
-    {
-        printf ("Unknown Args\n");
+    int  i = 0;
+    unsigned int length = 0;
+    if (!cmdLine || !decimal)
         return FALSE;
+    length = strlen(cmdLine);
+    for (i=0;i<length; i++) {
+        if (isdigit(cmdLine[i])) {
+            continue;
+        } else {
+            printf ("Invalid config: %s\n", cmdLine);
+            return FALSE;
+        }
     }
-    switch (cmd_type)
-    {
-        case CMD_TYPE_IF_STRING:
-            {
-                ret = ifLineToIfMap(cmdToken, &if_map);
-                if (ret == TRUE) {
-                    sptr_cdb->if_map = if_map;
-                    strncpy(sptr_cdb->if_str, cmdToken, CMD_LINE_LEN);
-                }
-            }
-            break;
-        default:
-            ret = TRUE;
-            break;
-    }
+    *decimal = atoi(cmdLine);
+    return TRUE;
+}
 
-    return ret;
+bool hexLinetoHex(char *cmdLine, unsigned int *hex)
+{
+    int  i = 0;
+    unsigned int length = 0;
+    if (!cmdLine || !hex)
+        return FALSE;
+    length = strlen(cmdLine);
+    if (length < 2) //0x
+        return FALSE;
+    for (i=0;i<length; i++) {
+        if(cmdLine[0] != '0')
+            return FALSE;
+        if (cmdLine[0] != 'x')
+            return FALSE;
+        if (i == 0 || i == 1)
+            continue;
+        if (isdigit(cmdLine[i]))
+            continue;
+        else
+            return FALSE;
+    }
+    //TODO
+    return TRUE;
+
+}
+
+bool stringLineToString(char *cmdLine, char *str)
+{
+    //TODO
+    return TRUE;
+}
+
+bool ipLineToIp(char *cmdLine, unsigned int *ip)
+{
+    //TODO
+    return TRUE;
 }
 
 cdb_node_t * getCdbExecCli(char *cmdline)
@@ -615,7 +656,7 @@ cdb_node_t * getCdbExecCli(char *cmdline)
     cmdRoot = getCmdNodeFromMode(curr_mode);
     if (!cmdRoot)
     {
-        printf ("Unknown Command\n");
+        printf ("Unknown Command......\n");
         return NULL;
     }
 
@@ -699,12 +740,15 @@ cdb_node_t * getCdbExecCli(char *cmdline)
         (i == (tokenCount-1))? (last_token = 1) : (last_token = 0);
 
         if (checkCmdLineMatch(cmdRoot, tokenDb[i], &matchIndex, &chkCount)) {
-            ret = execCmdNodeParseToken(last_token,
+            ret = cmdValidateCmdToken(last_token, cmdRoot[matchIndex].cmd_type, tokenDb[i]);
+            if (ret == FALSE)
+                return NULL;
+            ret = cmdPreExecuteCmdToken(last_token,
                 cmdRoot[matchIndex].cmd_type, tokenDb[i], &g_sptr_cdb);
             if (ret == FALSE)
                 return NULL;
             //execcmdCheckBuildCallBackStack(last_token, &cmdRoot[matchIndex], &g_sptr_cdb);
-            ret = cmdCheckBuildCallBackStack(last_token, &cmdRoot[matchIndex], &cmdCbStack);
+            ret = cmdCheckBuildCallBackStack(last_token, tokenDb[i], &cmdRoot[matchIndex], &cmdCbStack);
             if (ret == FALSE)
                 return NULL;
             cmdRoot = cmdRoot[matchIndex].next_node;
@@ -720,16 +764,17 @@ cdb_node_t * getCdbExecCli(char *cmdline)
 
     if (matchCount == 0)
     {
-        printf ("Unknown Command\n");
+        printf ("Unknown Command.\n");
         return NULL;
     }
     if ((tokenCount - matchCount) > 1)
     {
-        printf ("Unknown Command\n");
+        printf ("Unknown Command.\n");
         return NULL;
     }
     cmdPrintCbStack(&cmdCbStack);
     cmdExecCbStack(&cmdCbStack, &g_sptr_cdb);
+    cleanUpCdbCmdParam(&g_sptr_cdb);
     return cmdRoot;
 }
 

@@ -5,37 +5,63 @@
 #include "parser.h"
 #include "cmd.h"
 
+#define PRINT_LAST_TOKEN_AND_RETURN    { \
+                                        dprintf(CMD_DBG_LEVEL_ALL,\
+                                        ("%s: sptr_cdb->last_cmd_token = %d ... return\n", \
+                                        __FUNCTION__, sptr_cdb->last_cmd_token)); \
+                                        return;\
+                                       }
+
+#define PRINT_CFG_GEN_AND_RETURN    {\
+                                        dprintf(CMD_DBG_LEVEL_ALL,\
+                                        ("%s: sptr_cdb->curr_cmd_cfg_gen = %d ... return\n", \
+                                        __FUNCTION__, sptr_cdb->curr_cmd_cfg_gen)); \
+                                        return;\
+                                    }
+
 void enable_config_terminal(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
     setCmdModeParams(sptr_cdb, CMD_MODE_CONFIG);
 }
 void cmd_show_version(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
     if (sptr_cdb->last_cmd_token == 0)
-        return;
+        PRINT_LAST_TOKEN_AND_RETURN
     printf ("CLI Parser V.0.01\n");
 }
 void cmd_show_configurations(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
     if (sptr_cdb->last_cmd_token == 0)
-        return;
+        PRINT_LAST_TOKEN_AND_RETURN
     printf ("====== Current Saved Configuration ========\n");
 }
 void cmd_show_global_config_ver(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
     if (sptr_cdb->last_cmd_token == 0)
-        return;
+        PRINT_LAST_TOKEN_AND_RETURN
     printf ("====== Current Global Config List ========\n");
     printf ("\n");
 }
 
 void enable_cmd_prompt(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
     setCmdModeParams(sptr_cdb, CMD_MODE_ENABLE);
 }
 
 void config_interface(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
     setCmdModeParams(sptr_cdb, CMD_MODE_IF);
     printf ("Configuring if: %s\n",sptr_cdb->curr_mode_usr_str);
 }
@@ -45,6 +71,8 @@ void config_if_type_enet(cdb_t *sptr_cdb)
     char str[255] = {0};
     char type_char = 'e';
 
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
     sptr_cdb->if_type =  IF_TYPE_ETH;
     extern bool ifMapToIfLine(unsigned int *if_map, char *ifLine);
     ifMapToIfLine(&sptr_cdb->if_map, str);
@@ -53,13 +81,26 @@ void config_if_type_enet(cdb_t *sptr_cdb)
 
 void config_if_type_mgmt(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
     sptr_cdb->if_type =  IF_TYPE_MGMT;
 }
 
 void config_if_list(cdb_t *sptr_cdb)
 {
+    unsigned int if_map = 0;
+    bool ret = TRUE;
+
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
+
     if (sptr_cdb->last_cmd_token == 0)
-        return;
+        PRINT_LAST_TOKEN_AND_RETURN
+    ret = ifLineToIfMap(sptr_cdb->curr_cmd_str, &if_map);
+    if (ret == TRUE) {
+        sptr_cdb->if_map = if_map;
+        strncpy(sptr_cdb->if_str, sptr_cdb->curr_cmd_str, CMD_LINE_LEN);
+    }
     char str[255] = {0};
     char type_char = ' ';
     if (sptr_cdb->if_type == IF_TYPE_ETH)
@@ -68,36 +109,165 @@ void config_if_list(cdb_t *sptr_cdb)
         type_char = 'm';
     extern bool ifMapToIfLine(unsigned int *if_map, char *ifLine);
     ifMapToIfLine(&sptr_cdb->if_map, str);
-    printf ("Parsing if: %x(%s)---%s\n", sptr_cdb->if_map, sptr_cdb->if_str, str);
-    sprintf(sptr_cdb->curr_mode_usr_str, "(%c-%s)", type_char, str);
+    dprintf(CMD_DBG_LEVEL_ALL, ("Setting if list%s\n", str));
+    printf ("Current if: %x(%s)---%c-%s\n", sptr_cdb->if_map, sptr_cdb->if_str, type_char, str);
+    //sprintf(sptr_cdb->curr_mode_usr_str, "(%c-%s)", type_char, str);
 }
 void config_if_enable(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
+
     if (sptr_cdb->last_cmd_token == 0)
-        return;
+        PRINT_LAST_TOKEN_AND_RETURN
 }
 
 void config_if_disable(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
+
     if (sptr_cdb->last_cmd_token == 0)
-        return;
+        PRINT_LAST_TOKEN_AND_RETURN
 }
 
-void cmd_set_dbg_level(cdb_t *sptr_cdb)
+void cmd_set_dbg_cli(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
 
+    if (sptr_cdb->decimal[sptr_cdb->numDec] == CMD_CDB_MAX_DEC_VAL)
+        g_cli_dbg = CMD_CDB_MAX_DEC_VAL;
+    else if (sptr_cdb->decimal[sptr_cdb->numDec] > CMD_DBG_LEVEL_MAX)
+        printf ("Level is beyond max level %d\n",CMD_DBG_LEVEL_MAX);
+    else
+        g_cli_dbg |= (1 << sptr_cdb->decimal[sptr_cdb->numDec]);
+    dprintf(CMD_DBG_LEVEL_ALL, ("Setting Debug Cli\n"));
 }
 
-void cmd_set_dbg_all(cdb_t *sptr_cdb)
+void cmd_set_undbg_cli(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
+
+    if (sptr_cdb->decimal[sptr_cdb->numDec] == CMD_CDB_MAX_DEC_VAL)
+        g_cli_dbg = 0;
+    else
+        g_cli_dbg &= ~(1 << sptr_cdb->decimal[sptr_cdb->numDec]);
+    dprintf(CMD_DBG_LEVEL_ALL, ("Setting Un-Debug ALL\n"));
 }
 
 void cmd_set_undbg_all(cdb_t *sptr_cdb)
 {
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
+
+    if (sptr_cdb->last_cmd_token == 0)
+        PRINT_LAST_TOKEN_AND_RETURN
+    /* reset all debug variables */
+    g_cli_dbg = 0;
 }
 
 void cmd_set_dbg_level_val(cdb_t *sptr_cdb)
 {
+    unsigned int decimal;
 
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
+
+    if(strlen(sptr_cdb->curr_cmd_str) > 0)
+        decimalLineToDecimal(sptr_cdb->curr_cmd_str, &decimal);
+        sptr_cdb->decimal[sptr_cdb->numDec] = decimal;
+    dprintf(CMD_DBG_LEVEL_ALL, ("Setting Debug value %d in sptr_cdb\n", decimal));
+}
+
+void cmd_set_dbg_level_all(cdb_t *sptr_cdb)
+{
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
+
+    if (sptr_cdb->last_cmd_token == 0)
+        PRINT_LAST_TOKEN_AND_RETURN
+    sptr_cdb->decimal[sptr_cdb->numDec] = 0xFFFFFFFF;
+}
+
+void cmd_show_debug(cdb_t *sptr_cdb)
+{
+    int i;
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
+
+    if (sptr_cdb->last_cmd_token == 0)
+        PRINT_LAST_TOKEN_AND_RETURN
+    if (!g_cli_dbg)
+        return;
+    printf ("!\n");
+    if(g_cli_dbg == CMD_CDB_MAX_DEC_VAL) {
+        printf ("    debug cli all\n");
+    } else {
+        for (i = 0; i <= MAX_IF_BITS; i++) {
+            if (g_cli_dbg & (1 << i))
+                printf ("    debug cli level %d\n", i);
+        }
+    }
+    printf ("!\n");
+}
+
+void cmdBrowseNode(cdb_node_t *node, cdb_t *sptr_cdb)
+{
+    int curnode = 0, subnode = 0;
+    if(!node)
+        return;
+    if (node->flags & CMD_FLAG_LAST)
+    {
+        if(node->cmd_callback) {
+            printf("Exec callback for commanmd %s\n",node->cmd);
+            node->cmd_callback(sptr_cdb);
+        }
+        return;
+    }
+
+    do {
+        curnode = subnode;
+        if(node[subnode].cmd_callback) {
+            printf("Exec callback for cmd %s\n",node[subnode].cmd);
+            node[subnode].cmd_callback(sptr_cdb);
+        }
+        if (node[subnode].next_node) 
+            cmdBrowseNode(node[subnode].next_node, sptr_cdb);
+        subnode++;
+    }while (!(node[curnode].flags & CMD_FLAG_LAST));
+
+    /*if(node->cmd_callback) {
+        printf("Exec callback for cmd2 %s\n",node->cmd);
+        node->cmd_callback(sptr_cdb);
+    }*/
+
+}
+
+void cmd_show_running_config(cdb_t *sptr_cdb)
+{
+    cdb_t tmp_cdb;
+    cdb_node_t *node = NULL;
+
+    if (sptr_cdb->curr_cmd_cfg_gen)
+        PRINT_CFG_GEN_AND_RETURN
+
+    if (sptr_cdb->last_cmd_token == 0)
+        PRINT_LAST_TOKEN_AND_RETURN
+    sptr_cdb->curr_cmd_cfg_gen = TRUE;
+
+    /* Browse root node */
+    cmdBrowseNode(cmd_root, sptr_cdb);
+    cmdBrowseNode(cmd_enable, sptr_cdb);
+    cmdBrowseNode(cmd_cfg, sptr_cdb);
+    cmdBrowseNode(cmd_cfg_if, sptr_cdb);
+
+
+    tmp_cdb.last_cmd_token = 1;
+    cmd_show_debug(&tmp_cdb);
+    tmp_cdb.last_cmd_token = 0;
+
+    sptr_cdb->curr_cmd_cfg_gen = FALSE;
 }
 

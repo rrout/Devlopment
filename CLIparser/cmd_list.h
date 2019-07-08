@@ -34,8 +34,12 @@ void config_if_type_mgmt(cdb_t *sptr_cdb);
 void config_if_list(cdb_t *sptr_cdb);
 void config_if_enable(cdb_t *sptr_cdb);
 void config_if_disable(cdb_t *sptr_cdb);
-void cmd_set_dbg_level(cdb_t *sptr_cdb);
+void cmd_set_dbg_cli(cdb_t *sptr_cdb);
+void cmd_set_undbg_cli(cdb_t *sptr_cdb);
 void cmd_set_dbg_all(cdb_t *sptr_cdb);
 void cmd_set_undbg_all(cdb_t *sptr_cdb);
 void cmd_set_dbg_level_val(cdb_t *sptr_cdb);
+void cmd_set_dbg_level_all(cdb_t *sptr_cdb);
+void cmd_show_debug(cdb_t *sptr_cdb);
+void cmd_show_running_config(cdb_t *sptr_cdb);
 #endif /*__CMD_LIST_H__*/

@@ -6,7 +6,7 @@
 #include "cmd_list.h"
 #include "parser.h"
 
-unsigned int g_cli_dbg = 1;
+unsigned int g_cli_dbg = 0;
 
 mode_map_t g_mode_map[CMD_MODE_MAX] = {
     {CMD_MODE_MAX,     CMD_MODE_ROOT,   "root",          "$", cmd_root},
@@ -75,6 +75,17 @@ void setCmdModeParams(cdb_t *sptr_cdb, cdb_cmd_mode_t mode)
 	snprintf(sptr_cdb->cmd_prompt,CMD_LEN,"%s",getCmdModePrompt(mode));
 }
 
+void cleanUpCdbCmdParam(cdb_t *sptr_cdb)
+{
+    int i = 0;
+    sptr_cdb->curr_cmd_type = CMD_TYPE_MAX;
+    strcpy(sptr_cdb->curr_cmd_str, "\0");
+    sptr_cdb->numDec = 0;
+    sptr_cdb->numHex = 0;
+    sptr_cdb->numStr = 0;
+    sptr_cdb->numIp = 0;
+}
+
 void cleanUpCdb(cdb_t *sptr_cdb)
 {
     snprintf(sptr_cdb->curr_mode_usr_str, CMD_LINE_LEN, "%s", "");
@@ -92,7 +103,121 @@ cdb_node_t * getCmdNodeFromMode(cdb_cmd_mode_t mode)
     return NULL;
 }
 
-bool cmdNodeInsertCbStack(cdb_cb_stack_t *cbStack, cdb_node_t *node, bool last_node)
+bool cmdPreExecuteCmdToken(int last_token, cdb_cmd_type_t cmd_type, char *cmdToken, cdb_t *sptr_cdb)
+{
+    unsigned int if_map = 0;
+    unsigned int decimal;
+    unsigned int hex;
+    unsigned int ip;
+    char str[CMD_LINE_LEN] = {0};
+    bool ret = TRUE;
+
+    if (!cmdToken || !sptr_cdb)
+    {
+        printf ("Unknown Args\n");
+        return FALSE;
+    }
+    switch (cmd_type)
+    {
+        case CMD_TYPE_IF_STRING:
+            {
+                ret = ifLineToIfMap(cmdToken, &if_map);
+                if (ret == TRUE) {
+                    sptr_cdb->if_map = if_map;
+                    strncpy(sptr_cdb->if_str, cmdToken, CMD_LINE_LEN);
+                }
+            }
+            break;
+        case CMD_TYPE_DECIMAL:
+            {
+                ret = decimalLineToDecimal(cmdToken, &decimal);
+                if (ret == TRUE) {
+                   sptr_cdb->decimal[sptr_cdb->numDec] = decimal;
+                   sptr_cdb->numDec++;
+                }
+            }
+            break;
+        case CMD_TYPE_HEX:
+            {
+                ret = hexLinetoHex(cmdToken, &hex);
+                if (ret == TRUE) {
+                    sptr_cdb->hex[sptr_cdb->numHex] = hex;
+                    sptr_cdb->numHex++;
+                }
+            }
+            break;
+        case CMD_TYPE_STRING:
+            {
+                ret = stringLineToString(cmdToken, str);
+                if (ret == TRUE) {
+                    strcpy (sptr_cdb->str[sptr_cdb->numStr], str);
+                    sptr_cdb->numStr++;
+                }
+            }
+            break;
+        case CMD_TYPE_IP:
+            {
+                ret = ipLineToIp(cmdToken, &ip);
+            }
+            break;
+        default:
+            ret = TRUE;
+            break;
+    }
+
+    return ret;
+}
+
+bool cmdValidateCmdToken(int last_token, cdb_cmd_type_t cmd_type, char *cmdToken)
+{
+    unsigned int if_map = 0;
+    unsigned int decimal;
+    unsigned int hex;
+    unsigned int ip;
+    char str[CMD_LINE_LEN] = {0};
+    bool ret = TRUE;
+
+    if (!cmdToken)
+    {
+        printf ("Unknown Args\n");
+        return FALSE;
+    }
+    switch (cmd_type)
+    {
+        case CMD_TYPE_IF_STRING:
+            {
+                ret = ifLineToIfMap(cmdToken, &if_map);
+            }
+            break;
+        case CMD_TYPE_DECIMAL:
+            {
+                ret = decimalLineToDecimal(cmdToken, &decimal);
+            }
+            break;
+        case CMD_TYPE_HEX:
+            {
+                ret = hexLinetoHex(cmdToken, &hex);
+            }
+            break;
+        case CMD_TYPE_STRING:
+            {
+                ret = stringLineToString(cmdToken, str);
+            }
+            break;
+        case CMD_TYPE_IP:
+            {
+                ret = ipLineToIp(cmdToken, &ip);
+            }
+            break;
+        default:
+            ret = TRUE;
+            break;
+    }
+
+    return ret;
+}
+
+bool cmdNodeInsertCbStack(cdb_cb_stack_t *cbStack, cdb_node_t *node, char * cmd_str, bool last_node)
 {
     int nodeNum = 0;
     if (!cbStack || !node || cbStack->numNodes > CMD_MAX_TOKEN)
@@ -100,6 +225,8 @@ bool cmdNodeInsertCbStack(cdb_cb_stack_t *cbStack, cdb_node_t *node, bool last_n
 
     nodeNum = cbStack->numNodes;
     strcpy(cbStack->cb[nodeNum].cmd, node->cmd);
+    strcpy(cbStack->cb[nodeNum].cmd_str, cmd_str);
+    cbStack->cb[nodeNum].cmd_type = node->cmd_type;
     cbStack->cb[nodeNum].cmd_callback = node->cmd_callback;
     if (last_node == TRUE)
         cbStack->cb[nodeNum].last_node = TRUE;
@@ -108,7 +235,8 @@ bool cmdNodeInsertCbStack(cdb_cb_stack_t *cbStack, cdb_node_t *node, bool last_n
     return TRUE;
 }
 
-bool cmdCheckBuildCallBackStack(int is_full_cmd, cdb_node_t *node, cdb_cb_stack_t *cbStack)
+bool cmdCheckBuildCallBackStack(int is_full_cmd,
+    char *cmd_str, cdb_node_t *node, cdb_cb_stack_t *cbStack)
 {
     if (node)
     {
@@ -118,10 +246,10 @@ bool cmdCheckBuildCallBackStack(int is_full_cmd, cdb_node_t *node, cdb_cb_stack_
                printf("Incomplete command !\n");
                return FALSE;
             } else {
-                cmdNodeInsertCbStack(cbStack, node, is_full_cmd);
+                cmdNodeInsertCbStack(cbStack, node, cmd_str, is_full_cmd);
            }
        } else {
-           cmdNodeInsertCbStack(cbStack, node, is_full_cmd);
+           cmdNodeInsertCbStack(cbStack, node, cmd_str, is_full_cmd);
        }
     }
     else
@@ -134,20 +262,30 @@ bool cmdCheckBuildCallBackStack(int is_full_cmd, cdb_node_t *node, cdb_cb_stack_
 void cmdPrintCbStack(cdb_cb_stack_t *cbStack)
 {
     int i = 0;
+    if (!cbStack)
+        return;
+    dprintf(CMD_DBG_LEVEL_ALL,("===========CB STACK===============\n"));
     for( i = 0 ; i < cbStack->numNodes ; i++ )
     {
         dprintf(CMD_DBG_LEVEL_ALL,
-            ("Cmd:%s Callback:%p\n",cbStack->cb[i].cmd, cbStack->cb[i].cmd_callback));
+            ("Cmd:%-10s(%-5d)[%-10s] Callback:%p\n",cbStack->cb[i].cmd, cbStack->cb[i].cmd_type, cbStack->cb[i].cmd_str, cbStack->cb[i].cmd_callback));
     }
+    dprintf(CMD_DBG_LEVEL_ALL,("===========STACK END===============\n"));
 }
 
 void cmdExecCbStack(cdb_cb_stack_t *cbStack, cdb_t *sptr_cdb)
 {
     int i = 0;
+    if (!cbStack || !sptr_cdb)
+        return;
+
     for( i = cbStack->numNodes ; i > 0 ; i-- )
     {
+        dprintf(CMD_DBG_LEVEL_ALL,("Exec Cmd : %-10s (%-10s) CB:%p\n",cbStack->cb[i-1].cmd, cbStack->cb[i-1].cmd_str, cbStack->cb[i-1].cmd_callback));
         if (cbStack->cb[i-1].cmd_callback) {
             sptr_cdb->last_cmd_token = cbStack->cb[i-1].last_node;
+            strcpy(sptr_cdb->curr_cmd_str, cbStack->cb[i-1].cmd_str);
+            sptr_cdb->curr_cmd_type = cbStack->cb[i-1].cmd_type;
             cbStack->cb[i-1].cmd_callback(sptr_cdb);
             sptr_cdb->last_cmd_token = FALSE;
         }

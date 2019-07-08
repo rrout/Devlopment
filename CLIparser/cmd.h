@@ -11,6 +11,14 @@
 #define CMD_MAX_TOKEN_LEN           50
 #define CMD_HOST_NAME_LEN	        55
 
+#define CMD_CDB_MAX_DEC             20
+#define CMD_CDB_MAX_HEX             20
+#define CMD_CDB_MAX_STR             20
+#define CMD_CDB_MAX_IP              20
+
+#define CMD_CDB_MAX_DEC_VAL         0xFFFFFFFF
+#define CMD_CDB_MAX_HEX_VAL         0xFFFFFFFF
+
 
 #define CMD_FLAG_FIRST              1 << 0
 #define CMD_FLAG_LAST               1 << 1
@@ -20,6 +28,7 @@
 #define CMD_DBG_LEVEL_ALL   1 << 0
 #define CMD_DBG_LEVEL_1     1 << 1
 #define CMD_DBG_LEVEL_2     1 << 2
+#define CMD_DBG_LEVEL_MAX   31
 
 typedef enum {
     FALSE = 0,
@@ -54,9 +63,24 @@ typedef struct _cdb {
 	char cmd_prompt[2];
     unsigned int last_cmd_token;
 
+    /*
+     * each time callback is called
+     * we should know what command token
+     * is getting executed
+     */
+    cdb_cmd_type_t curr_cmd_type;
+    char curr_cmd_str[CMD_LEN];
+    bool curr_cmd_cfg_gen;
+
+    /*
+     * Command Params
+     */
     unsigned char if_type;
     unsigned int if_map;
     char if_str[CMD_LINE_LEN];
+
+    unsigned int numDec;
+    unsigned int decimal[CMD_CDB_MAX_DEC];
 
 	unsigned int number1;
 	unsigned int number2;
@@ -70,6 +94,9 @@ typedef struct _cdb {
 	unsigned int number10;
 	unsigned int number11;
 
+    unsigned int numStr;
+    char str[CMD_CDB_MAX_STR][CMD_LEN];
+
 	char str1[CMD_LEN];
 	char str2[CMD_LEN];
 	char str3[CMD_LEN];
@@ -81,6 +108,12 @@ typedef struct _cdb {
 	char str9[CMD_LEN];
 	char str10[CMD_LEN];
 	char str11[CMD_LEN];
+
+    unsigned int numHex;
+    unsigned int hex[CMD_CDB_MAX_HEX];
+
+    unsigned int numIp;
+    unsigned int ip[CMD_CDB_MAX_IP];
 }cdb_t;
 
 typedef struct _cdb_node {
@@ -95,6 +128,8 @@ typedef struct _cdb_node {
 
 typedef struct _cdb_cb {
     char cmd[CMD_LEN];
+    char cmd_str[CMD_LEN];
+    cdb_cmd_type_t cmd_type;
     bool last_node;
     void (*cmd_callback) (cdb_t *sptr_cdb);
 }cdb_cb_t;
@@ -129,6 +164,7 @@ extern unsigned int g_cli_dbg;
 extern cdb_node_t cmd_root[];
 extern cdb_node_t cmd_enable[];
 extern cdb_node_t cmd_cfg[];
+extern cdb_node_t cmd_cfg_if[];
 extern cdb_node_t cmd_cfg_terminal[];
 extern cdb_node_t cmd_show[];
 
@@ -142,10 +178,13 @@ void setCmdModeParams(cdb_t *sptr_cdb, cdb_cmd_mode_t mode);
 cdb_node_t * getCmdNodeFromMode(cdb_cmd_mode_t mode);
 cdb_node_t * getPrevCmdNodeFromMode(cdb_cmd_mode_t mode);
 cdb_cmd_mode_t getPrevCmdModeFromMode(cdb_cmd_mode_t mode);
-bool cmdNodeInsertCbStack(cdb_cb_stack_t *cbStack, cdb_node_t *node, bool last_node);
-bool cmdCheckBuildCallBackStack(int is_full_cmd, cdb_node_t *node, cdb_cb_stack_t *cbStack);
+bool cmdPreExecuteCmdToken(int last_token, cdb_cmd_type_t cmd_type, char *cmdToken, cdb_t *sptr_cdb);
+bool cmdValidateCmdToken(int last_token, cdb_cmd_type_t cmd_type, char *cmdToken);
+bool cmdNodeInsertCbStack(cdb_cb_stack_t *cbStack, cdb_node_t *node, char *cmd_str, bool last_node);
+bool cmdCheckBuildCallBackStack(int is_full_cmd, char *cmd_str, cdb_node_t *node, cdb_cb_stack_t *cbStack);
 void cmdPrintCbStack(cdb_cb_stack_t *cbStack);
 void cmdExecCbStack(cdb_cb_stack_t *cbStack, cdb_t *sptr_cdb);
+void cleanUpCdbCmdParam(cdb_t *sptr_cdb);
 void cleanUpCdb(cdb_t *sptr_cdb);
 
 #endif /*__CMD_H__*/

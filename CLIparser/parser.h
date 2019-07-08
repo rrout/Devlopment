@@ -30,6 +30,12 @@ void parserCliSrart(char *cliHost);
 cdb_node_t * getCdbNode(char *);
 cdb_node_t * getCdbNextNode(char *);
 cdb_node_t * getCdbExecCli(char *cmdline);
+bool ifLineToIfMap(char *cmdLine, unsigned int *if_map);
+
+bool decimalLineToDecimal(char *cmdLine, unsigned int *decimal);
+bool hexLinetoHex(char *cmdLine, unsigned int *hex);
+bool stringLineToString(char *cmdLine, char *str);
+bool ipLineToIp(char *cmdLine, unsigned int *ip);
 
 extern cdb_t g_sptr_cdb;
 #endif /*__PARSER_H__*/
