@@ -5,6 +5,7 @@
 #include "cmd.h"
 #include "cmd_list.h"
 #include "parser.h"
+#include "test.h"
 
 unsigned int g_cli_dbg = 0;
 
@@ -73,11 +74,13 @@ void setCmdModeParams(cdb_t *sptr_cdb, cdb_cmd_mode_t mode)
 	sptr_cdb->mode = mode;
 	snprintf(sptr_cdb->curr_mode_str, CMD_LEN, "%s", getCmdModeStr(mode));
 	snprintf(sptr_cdb->cmd_prompt,CMD_LEN,"%s",getCmdModePrompt(mode));
+    /* reset if_map id mode ts changing from CFG_IF */
+    //TODO
 }
 
 void cleanUpCdbCmdParam(cdb_t *sptr_cdb)
 {
-    int i = 0;
+    //int i = 0;
     sptr_cdb->curr_cmd_type = CMD_TYPE_MAX;
     strcpy(sptr_cdb->curr_cmd_str, "\0");
     sptr_cdb->numDec = 0;
@@ -291,3 +294,80 @@ void cmdExecCbStack(cdb_cb_stack_t *cbStack, cdb_t *sptr_cdb)
         }
     }
 }
+
+void cmdBrowseNode(cdb_cmd_mode_t mode,cdb_node_t *node, cdb_t *sptr_cdb)
+{
+    int curnode = 0, subnode = 0;
+    if(!node)
+        return;
+
+    do {
+        curnode = subnode;
+        dprintf(CMD_DBG_LEVEL_ALL, ("Exec callback for cmd %s\n",node[subnode].cmd));
+        if(node[subnode].cmd_callback) {
+            if (node[subnode].mode_flags == mode)
+                node[subnode].cmd_callback(sptr_cdb);
+        }
+        if (node[subnode].next_node)
+            cmdBrowseNode(mode, node[subnode].next_node, sptr_cdb);
+        subnode++;
+    }while (!(node[curnode].flags & CMD_FLAG_LAST));
+}
+
+void cmdPrintNode(cdb_cmd_mode_t mode,cdb_node_t *node, cdb_t *sptr_cdb)
+{
+    int curnode = 0, subnode = 0, i = 0;
+    static char cmd_list[CMD_CDB_MAX_STR][CMD_LEN];
+    static int cmd_cnt;
+    if(!node) {
+        if (cmd_cnt > 0)
+            cmd_cnt--;
+        return;
+    }
+
+    do {
+        curnode = subnode;
+        dprintf(CMD_DBG_LEVEL_ALL, ("Exec callback for cmd %s\n",node[subnode].cmd));
+        if(node[subnode].cmd_type == CMD_TYPE_CMD) {
+            strcpy(cmd_list[cmd_cnt++], node[subnode].cmd);
+        } else {
+            strcpy(cmd_list[cmd_cnt++], "<>");
+        }
+        if (node[subnode].flags & CMD_FLAG_CR_ALLOWED) {
+            for( i = 0 ; i < cmd_cnt ; i++ )
+            {
+                printf("%s ", cmd_list[i]);
+            }
+            printf("\n");
+        }
+        cmdPrintNode(mode, node[subnode].next_node, sptr_cdb);
+        subnode++;
+    }while (!(node[curnode].flags & CMD_FLAG_LAST));
+
+    if (cmd_cnt > 0)
+        cmd_cnt--;
+}
+
+void cmdConfigDebug(int dbg)
+{
+    int i;
+    if (!dbg)
+        return;
+    printf ("!\n");
+    if(dbg == CMD_CDB_MAX_DEC_VAL) {
+        printf ("debug cli all\n");
+    } else {
+        for (i = 0; i <= MAX_IF_BITS; i++) {
+            if (dbg & (1 << i))
+                printf ("debug cli level %d\n", i);
+        }
+    }
+    printf ("!\n");
+}
+
+void cmdConfigIf(int *ifDb)
+{
+    portConfigShow(g_port_list);
+}
+
+

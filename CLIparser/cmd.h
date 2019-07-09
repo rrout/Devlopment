@@ -186,5 +186,11 @@ void cmdPrintCbStack(cdb_cb_stack_t *cbStack);
 void cmdExecCbStack(cdb_cb_stack_t *cbStack, cdb_t *sptr_cdb);
 void cleanUpCdbCmdParam(cdb_t *sptr_cdb);
 void cleanUpCdb(cdb_t *sptr_cdb);
+void cmdBrowseNode(cdb_cmd_mode_t mode,cdb_node_t *node, cdb_t *sptr_cdb);
+void cmdPrintNode(cdb_cmd_mode_t mode,cdb_node_t *node, cdb_t *sptr_cdb);
+
+
+void cmdConfigDebug(int dbg);
+void cmdConfigIf(int *ifDb);
 
 #endif /*__CMD_H__*/

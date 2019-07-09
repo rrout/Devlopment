@@ -33,7 +33,7 @@ cdb_node_t cmd_cfg_terminal[] = {
 
 cdb_node_t cfg_if_type[] = {
 	{
-		CMD_MODE_CONFIG,
+		CMD_MODE_IF,
         CMD_TYPE_CMD,
 		"ethernet",
 		"Ethernet Interface",
@@ -42,7 +42,7 @@ cdb_node_t cfg_if_type[] = {
 		CMD_FLAG_NEXT
 	},
     {
-		CMD_MODE_CONFIG,
+		CMD_MODE_IF,
         CMD_TYPE_CMD,
 		"mgmt",
 		"Management Interface",
@@ -54,7 +54,7 @@ cdb_node_t cfg_if_type[] = {
 
 cdb_node_t cfg_if_list[] = {
 	{
-		CMD_MODE_CONFIG,
+		CMD_MODE_NONE,
         CMD_TYPE_IF_STRING,
 		"",
 		"If Or If List (1,3-5,7) ",
@@ -64,9 +64,21 @@ cdb_node_t cfg_if_list[] = {
 	}
 };
 
+cdb_node_t cfg_set_str [] = {
+    {
+        CMD_MODE_NONE,
+        CMD_TYPE_STRING,
+        "",
+        "Set Cmd String",
+        config_set_string,
+        NULL,
+        CMD_FLAG_LAST | CMD_FLAG_CR_ALLOWED
+    },
+};
+
 cdb_node_t cmd_cfg_if[] = {
     {
-		CMD_MODE_CONFIG,
+		CMD_MODE_IF,
         CMD_TYPE_CMD,
 		"interface",
 		"Config interface",
@@ -74,6 +86,15 @@ cdb_node_t cmd_cfg_if[] = {
 		cfg_if_type,
 		CMD_FLAG_NEXT
 	},
+    {
+        CMD_MODE_IF,
+        CMD_TYPE_CMD,
+        "name",
+        "Set Interface Name",
+        config_if_name,
+        cfg_set_str,
+        CMD_FLAG_NEXT
+    },
     {
         CMD_MODE_IF,
         CMD_TYPE_CMD,
@@ -93,7 +114,7 @@ cdb_node_t cmd_cfg_if[] = {
         CMD_FLAG_CR_ALLOWED
     },
    {
-		CMD_MODE_NONE,
+		CMD_MODE_ENABLE,
         CMD_TYPE_CMD,
 		"debug",
 		"Set Debug Level",
@@ -102,7 +123,7 @@ cdb_node_t cmd_cfg_if[] = {
 		CMD_FLAG_NEXT
 	},
     {
-        CMD_MODE_NONE,
+        CMD_MODE_ENABLE,
         CMD_TYPE_CMD,
         "undebug",
         "Unset Debug Level",
@@ -111,7 +132,7 @@ cdb_node_t cmd_cfg_if[] = {
         CMD_FLAG_NEXT
     },
     {
-		CMD_MODE_ENABLE,
+		CMD_MODE_NONE,
         CMD_TYPE_CMD,
 		"show",
 		"Show Commands",
@@ -123,7 +144,7 @@ cdb_node_t cmd_cfg_if[] = {
 
 cdb_node_t cmd_cfg[] = {
 	{
-		CMD_MODE_ENABLE,
+		CMD_MODE_CONFIG,
         CMD_TYPE_CMD,
 		"interface",
 		"Config interface",
@@ -132,7 +153,7 @@ cdb_node_t cmd_cfg[] = {
 		CMD_FLAG_NEXT
 	},
     {
-		CMD_MODE_NONE,
+		CMD_MODE_ENABLE,
         CMD_TYPE_CMD,
 		"debug",
 		"Set Debug Level",
@@ -141,7 +162,7 @@ cdb_node_t cmd_cfg[] = {
 		CMD_FLAG_NEXT
 	},
     {
-        CMD_MODE_NONE,
+        CMD_MODE_ENABLE,
         CMD_TYPE_CMD,
         "undebug",
         "Unset Debug Level",
@@ -150,7 +171,7 @@ cdb_node_t cmd_cfg[] = {
         CMD_FLAG_NEXT
     },
     {
-		CMD_MODE_ENABLE,
+		CMD_MODE_NONE,
         CMD_TYPE_CMD,
 		"show",
 		"Show Commands",
@@ -158,6 +179,18 @@ cdb_node_t cmd_cfg[] = {
 		cmd_show,
 		CMD_FLAG_NEXT | CMD_FLAG_LAST
 	}
+};
+
+cdb_node_t cmd_show_if_brief[] = {
+    {
+        CMD_MODE_NONE,
+        CMD_TYPE_CMD,
+        "brief",
+        "Show Interfase Brief",
+        cmd_show_interface_brief,
+        NULL,
+        CMD_FLAG_LAST | CMD_FLAG_CR_ALLOWED
+    }
 };
 
 cdb_node_t cmd_show[] = {
@@ -197,6 +230,24 @@ cdb_node_t cmd_show[] = {
         NULL,
         CMD_FLAG_CR_ALLOWED
     },
+    {
+        CMD_MODE_NONE,
+        CMD_TYPE_CMD,
+        "interfaces",
+        "Show Interface Configurations",
+        cmd_show_interface_config,
+        cmd_show_if_brief,
+        CMD_FLAG_NEXT | CMD_FLAG_CR_ALLOWED
+    },
+    {
+        CMD_MODE_NONE,
+        CMD_TYPE_CMD,
+        "cli",
+        "Show All Commands",
+        cmd_show_cli,
+        NULL,
+        CMD_FLAG_CR_ALLOWED
+    },
 	{
 		CMD_MODE_NONE,
         CMD_TYPE_CMD,
@@ -216,13 +267,13 @@ cdb_node_t cmd_set_debug_val[] = {
         "Set Debug Level Value",
         cmd_set_dbg_level_val,
         NULL,
-         CMD_FLAG_LAST | CMD_FLAG_CR_ALLOWED
+        CMD_FLAG_LAST | CMD_FLAG_CR_ALLOWED
     },
 };
 
 cdb_node_t cmd_set_debug_level[] = {
     {
-        CMD_MODE_NONE,
+        CMD_MODE_ENABLE,
         CMD_TYPE_CMD,
         "level",
         "Set Debug Level",
@@ -231,7 +282,7 @@ cdb_node_t cmd_set_debug_level[] = {
         CMD_FLAG_NEXT
     },
     {
-        CMD_MODE_NONE,
+        CMD_MODE_ENABLE,
         CMD_TYPE_CMD,
         "all",
         "Set all debugging Levels",
@@ -243,7 +294,7 @@ cdb_node_t cmd_set_debug_level[] = {
 
 cdb_node_t cmd_debug[] = {
     {
-        CMD_MODE_NONE,
+        CMD_MODE_ENABLE,
         CMD_TYPE_CMD,
         "cli",
         "Set cli debugging Levels",
@@ -255,7 +306,7 @@ cdb_node_t cmd_debug[] = {
 
 cdb_node_t cmd_undebug[] = {
     {
-        CMD_MODE_NONE,
+        CMD_MODE_ENABLE,
         CMD_TYPE_CMD,
         "cli",
         "Reset all debugging",
@@ -264,7 +315,7 @@ cdb_node_t cmd_undebug[] = {
         CMD_FLAG_NEXT
     },
     {
-        CMD_MODE_NONE,
+        CMD_MODE_ENABLE,
         CMD_TYPE_CMD,
         "all",
         "Set Debug Level",
@@ -285,7 +336,7 @@ cdb_node_t cmd_enable[] = {
 		CMD_FLAG_NEXT
 	},
     {
-		CMD_MODE_NONE,
+		CMD_MODE_ENABLE,
         CMD_TYPE_CMD,
 		"debug",
 		"Set Debug Level",
@@ -294,7 +345,7 @@ cdb_node_t cmd_enable[] = {
 		CMD_FLAG_NEXT
 	},
     {
-        CMD_MODE_NONE,
+        CMD_MODE_ENABLE,
         CMD_TYPE_CMD,
         "undebug",
         "Unset Debug Level",
